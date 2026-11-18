@@ -9,6 +9,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "preview:worker": "astro build && wrangler dev",
+    "deploy": "astro build && wrangler deploy",
     "astro": "astro"
   },
   "dependencies": {
@@ -24,6 +26,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "lucide-astro": "^0.556.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "wrangler": "^4.164.0"
   }
 }
