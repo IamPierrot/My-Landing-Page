@@ -1,0 +1,64 @@
+---
+import { GITHUB_URL, LINKEDIN_URL, HACKTHEBOX_URL, AUTHOR } from '../consts';
+const year = new Date().getFullYear();
+---
+
+<footer class="w-full border-t border-[#243752] bg-[#101A2B] text-xs text-[#8FA6C2] py-8 px-4 sm:px-6 transition-colors">
+	<div class="max-w-4xl mx-auto flex flex-col gap-5">
+		<!-- SOC Telemetry Bar -->
+		<div class="flex items-center flex-wrap gap-x-4 gap-y-2 font-mono text-[11px] text-[#546C8E] pb-3 border-b border-[#243752]/60">
+			<div class="inline-flex items-center text-[#8FA6C2]">
+				<span class="relative flex h-2 w-2 mr-2">
+					<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#38BDF8] opacity-75"></span>
+					<span class="relative inline-flex rounded-full h-2 w-2 bg-[#38BDF8]"></span>
+				</span>
+				<span>SYS_STATUS: {AUTHOR.status}</span>
+			</div>
+			<span class="text-[#243752] hidden sm:inline">|</span>
+			<span>NET_OBS: {AUTHOR.telemetry}</span>
+			<span class="text-[#243752] hidden sm:inline">|</span>
+			<span>{AUTHOR.systems}</span>
+		</div>
+
+		<!-- Footer Bottom Row -->
+		<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+			<div class="text-[#8FA6C2] text-xs sm:text-sm">
+				&copy; {year} <a href="/about" class="text-[#DCE8F5] hover:text-[#38BDF8] font-medium transition-colors">{AUTHOR.name}</a> ({AUTHOR.fullName}). Focused on Blue Team, DFIR &amp; Systems.
+			</div>
+
+			<div class="flex items-center flex-wrap gap-3 font-mono text-xs">
+				<a
+					href={GITHUB_URL}
+					target="_blank"
+					rel="noreferrer noopener"
+					class="text-[#8FA6C2] hover:text-[#38BDF8] transition-colors"
+				>
+					GitHub
+				</a>
+				<span class="text-[#243752]">&bull;</span>
+				<a
+					href={LINKEDIN_URL}
+					target="_blank"
+					rel="noreferrer noopener"
+					class="text-[#8FA6C2] hover:text-[#38BDF8] transition-colors"
+				>
+					LinkedIn
+				</a>
+				<span class="text-[#243752]">&bull;</span>
+				<a
+					href={HACKTHEBOX_URL}
+					target="_blank"
+					rel="noreferrer noopener"
+					class="text-[#8FA6C2] hover:text-[#38BDF8] transition-colors"
+					title="IamPierrot HTB Profile"
+				>
+					HackTheBox
+				</a>
+				<span class="text-[#243752]">&bull;</span>
+				<a href="/rss.xml" class="text-[#8FA6C2] hover:text-[#38BDF8] transition-colors">
+					RSS
+				</a>
+			</div>
+		</div>
+	</div>
+</footer>

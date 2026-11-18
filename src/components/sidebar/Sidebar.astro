@@ -1,0 +1,44 @@
+---
+interface Props {
+	ariaLabel?: string;
+	class?: string;
+	position?: 'left' | 'right';
+	stickyOffset?: string;
+}
+
+const {
+	ariaLabel = 'Sidebar navigation',
+	class: className = '',
+	position = 'right',
+	stickyOffset = 'top-20 sm:top-24',
+} = Astro.props;
+---
+
+<aside
+	aria-label={ariaLabel}
+	class:list={[
+		'sidebar-desktop hidden lg:flex flex-col gap-6 w-64 shrink-0 sticky max-h-[calc(100vh-6rem)] overflow-y-auto pb-8 pr-1 select-none',
+		stickyOffset,
+		position === 'right' ? 'order-last' : 'order-first',
+		className,
+	]}
+>
+	<slot />
+</aside>
+
+<style>
+	/* Subtle minimalist scrollbar for long sidebars */
+	.sidebar-desktop::-webkit-scrollbar {
+		width: 4px;
+	}
+	.sidebar-desktop::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.sidebar-desktop::-webkit-scrollbar-thumb {
+		background: #243752;
+		border-radius: 4px;
+	}
+	.sidebar-desktop::-webkit-scrollbar-thumb:hover {
+		background: #38BDF8;
+	}
+</style>

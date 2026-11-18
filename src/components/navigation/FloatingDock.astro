@@ -1,0 +1,101 @@
+---
+import { House, FolderCode, BookOpen, UserRound, Github, Mail, Terminal } from 'lucide-astro';
+import NavigationSwitcher from './NavigationSwitcher.astro';
+import { navigationItems } from './navigation.config';
+import { GITHUB_URL, HACKTHEBOX_URL } from '../../consts';
+
+const pathname = Astro.url.pathname.replace(import.meta.env.BASE_URL, '');
+const subpath = pathname.match(/[^\/]+/g);
+
+const icons = {
+	House,
+	FolderCode,
+	BookOpen,
+	UserRound,
+};
+---
+
+<nav
+	class="nav-floating autohide-nav hidden md:flex sticky top-5 sm:top-6 z-50 w-full justify-center px-4 pointer-events-none transition-all duration-200"
+	aria-label="Floating Dock Navigation"
+>
+	<div
+		class="pointer-events-auto inline-flex items-center gap-1.5 sm:gap-2 p-2 sm:p-2.5 rounded-full border border-[#243752] bg-[#101A2B]/95 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.55)] hover:border-[#38BDF8]/40 transition-all duration-200"
+	>
+		<!-- Brand pill -->
+		<a
+			href="/"
+			class="flex items-center gap-2 pl-4 pr-3 py-2 rounded-full font-mono text-xs sm:text-sm font-bold text-[#38BDF8] hover:text-[#7DD3FC] hover:bg-[#16233B] transition-colors"
+			aria-label="Pierrot Homepage"
+		>
+			<span class="h-2.5 w-2.5 rounded-full bg-[#38BDF8] animate-pulse"></span>
+			<span>pierrot</span>
+		</a>
+
+		<div class="h-5 w-[1px] bg-[#243752] mx-0.5" aria-hidden="true"></div>
+
+		<!-- Nav links (Bigger Scale) -->
+		<div class="flex items-center gap-1 sm:gap-1.5">
+			{
+				navigationItems.map((item) => {
+					const Icon = icons[item.iconName];
+					const isActive = item.href === pathname || item.href === '/' + (subpath?.[0] || '');
+					return (
+						<a
+							href={item.href}
+							aria-current={isActive ? 'page' : undefined}
+							class:list={[
+								'group relative inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full font-mono text-xs sm:text-sm transition-all duration-150',
+								isActive
+									? 'bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/35 shadow-[0_0_14px_rgba(56,189,248,0.2)] font-bold'
+									: 'text-[#8FA6C2] hover:text-[#DCE8F5] hover:bg-[#16233B] border border-transparent font-medium',
+							]}
+						>
+							<Icon class="w-4 h-4 transition-transform duration-150 group-hover:scale-110" />
+							<span>{item.label}</span>
+						</a>
+					);
+				})
+			}
+		</div>
+
+		<div class="h-5 w-[1px] bg-[#243752] mx-0.5" aria-hidden="true"></div>
+
+		<!-- Actions -->
+		<div class="flex items-center gap-1.5 pr-1">
+			<a
+				href={GITHUB_URL}
+				target="_blank"
+				rel="noreferrer noopener"
+				class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full text-[#8FA6C2] hover:text-[#38BDF8] hover:bg-[#16233B] transition-colors"
+				aria-label="GitHub Profile"
+				title="GitHub Profile"
+			>
+				<Github class="w-4 h-4" />
+			</a>
+
+			<a
+				href={HACKTHEBOX_URL}
+				target="_blank"
+				rel="noreferrer noopener"
+				class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full text-[#8FA6C2] hover:text-[#38BDF8] hover:bg-[#16233B] transition-colors"
+				aria-label="HackTheBox Profile (IamPierrot)"
+				title="IamPierrot HTB Profile"
+			>
+				<Terminal class="w-4 h-4" />
+			</a>
+
+			<a
+				href="mailto:phatnguyentan836@gmail.com"
+				class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full text-[#8FA6C2] hover:text-[#38BDF8] hover:bg-[#16233B] transition-colors"
+				aria-label="Send Email"
+				title="Contact via Email"
+			>
+				<Mail class="w-4 h-4" />
+			</a>
+
+			<!-- Mode Switcher -->
+			<NavigationSwitcher variant="compact" />
+		</div>
+	</div>
+</nav>

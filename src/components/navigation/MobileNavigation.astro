@@ -1,0 +1,210 @@
+---
+import {
+	Shield,
+	Menu,
+	X,
+	House,
+	FolderCode,
+	BookOpen,
+	UserRound,
+	Github,
+	Mail,
+	Terminal,
+} from 'lucide-astro';
+import { navigationItems } from './navigation.config';
+import { GITHUB_URL, HACKTHEBOX_URL } from '../../consts';
+
+const pathname = Astro.url.pathname.replace(import.meta.env.BASE_URL, '');
+const subpath = pathname.match(/[^\/]+/g);
+
+const icons = {
+	House,
+	FolderCode,
+	BookOpen,
+	UserRound,
+};
+---
+
+<header class="autohide-nav md:hidden sticky top-0 z-50 w-full border-b border-[#243752] bg-[#101A2B]/95 backdrop-blur-md">
+	<div class="px-5 py-3.5 flex items-center justify-between">
+		<!-- Brand -->
+		<a
+			href="/"
+			class="flex items-center gap-2.5 font-mono text-sm tracking-tight text-[#DCE8F5] hover:text-[#38BDF8] transition-colors"
+			aria-label="Pierrot Homepage"
+		>
+			<div class="w-7 h-7 rounded-lg bg-[#16233B] border border-[#243752] flex items-center justify-center text-[#38BDF8]">
+				<Shield class="w-4 h-4" />
+			</div>
+			<span class="font-extrabold text-sm text-[#DCE8F5] tracking-wider">PIERROT</span>
+			<span class="text-[#546C8E] text-xs">//</span>
+			<span class="text-xs text-[#38BDF8] font-mono">SEC_LAB</span>
+		</a>
+
+		<!-- Mobile Menu Toggle Button (44x44px touch target) -->
+		<button
+			id="mobile-drawer-toggle"
+			type="button"
+			class="inline-flex items-center justify-center w-11 h-11 rounded-lg text-[#8FA6C2] hover:text-[#38BDF8] hover:bg-[#16233B] border border-[#243752] transition-colors cursor-pointer"
+			aria-label="Open navigation menu"
+			aria-expanded="false"
+			aria-controls="mobile-navigation-drawer"
+		>
+			<Menu id="mobile-icon-open" class="w-6 h-6 block" />
+			<X id="mobile-icon-close" class="w-6 h-6 hidden" />
+		</button>
+	</div>
+
+	<!-- Backdrop overlay -->
+	<div
+		id="mobile-backdrop"
+		class="hidden fixed inset-0 top-[57px] bg-[#080D18]/80 backdrop-blur-sm z-40 transition-opacity"
+		aria-hidden="true"
+	>
+	</div>
+
+	<!-- Mobile Drawer Panel -->
+	<div
+		id="mobile-navigation-drawer"
+		class="hidden fixed top-[57px] left-0 right-0 bg-[#101A2B] border-b border-[#243752] z-50 p-6 shadow-2xl flex-col gap-6 max-h-[calc(100vh-57px)] overflow-y-auto animate-fade-in"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Site Navigation"
+	>
+		<!-- Primary Navigation Links -->
+		<nav class="flex flex-col gap-2" aria-label="Mobile Navigation Links">
+			{
+				navigationItems.map((item) => {
+					const Icon = icons[item.iconName];
+					const isActive = item.href === pathname || item.href === '/' + (subpath?.[0] || '');
+					return (
+						<a
+							href={item.href}
+							aria-current={isActive ? 'page' : undefined}
+							class:list={[
+								'mobile-nav-link flex items-center gap-3.5 px-4 py-3.5 rounded-lg font-mono text-base transition-all duration-150 min-h-[48px]',
+								isActive
+									? 'bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/35 font-bold shadow-sm'
+									: 'text-[#8FA6C2] hover:text-[#DCE8F5] hover:bg-[#16233B] border border-transparent font-medium',
+							]}
+						>
+							<Icon class="w-5 h-5 text-[#38BDF8]" />
+							<span>{item.label}</span>
+							{isActive && <span class="ml-auto text-xs text-[#38BDF8] font-mono">[CURRENT]</span>}
+						</a>
+					);
+				})
+			}
+		</nav>
+
+		<!-- External Actions & Contact -->
+		<div class="pt-4 border-t border-[#243752]/60 flex flex-col gap-3">
+			<div class="text-[11px] font-mono uppercase tracking-wider text-[#546C8E]">
+				Actions &amp; Connect
+			</div>
+			<div class="grid grid-cols-3 gap-2">
+				<a
+					href={GITHUB_URL}
+					target="_blank"
+					rel="noreferrer noopener"
+					class="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-md bg-[#16233B] text-[#DCE8F5] hover:text-[#38BDF8] border border-[#243752] text-xs font-mono transition-colors min-h-[44px]"
+				>
+					<Github class="w-4 h-4" />
+					<span>GitHub</span>
+				</a>
+
+				<a
+					href={HACKTHEBOX_URL}
+					target="_blank"
+					rel="noreferrer noopener"
+					class="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-md bg-[#16233B] text-[#DCE8F5] hover:text-[#38BDF8] border border-[#243752] text-xs font-mono transition-colors min-h-[44px]"
+					title="IamPierrot HTB Profile"
+				>
+					<Terminal class="w-4 h-4 text-[#38BDF8]" />
+					<span>HTB</span>
+				</a>
+
+				<a
+					href="mailto:phatnguyentan836@gmail.com"
+					class="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-md bg-[#38BDF8]/15 text-[#38BDF8] hover:bg-[#38BDF8]/25 border border-[#38BDF8]/30 text-xs font-mono font-medium transition-colors min-h-[44px]"
+				>
+					<Mail class="w-4 h-4" />
+					<span>Contact</span>
+				</a>
+			</div>
+		</div>
+	</div>
+</header>
+
+<script>
+	function setupMobileNav() {
+		const toggleBtn = document.getElementById('mobile-drawer-toggle');
+		const drawer = document.getElementById('mobile-navigation-drawer');
+		const backdrop = document.getElementById('mobile-backdrop');
+		const openIcon = document.getElementById('mobile-icon-open');
+		const closeIcon = document.getElementById('mobile-icon-close');
+
+		if (!toggleBtn || !drawer || !backdrop) return;
+
+		const btn: HTMLElement = toggleBtn;
+		const panel: HTMLElement = drawer;
+		const bg: HTMLElement = backdrop;
+
+		function openMenu() {
+			btn.setAttribute('aria-expanded', 'true');
+			btn.setAttribute('aria-label', 'Close navigation menu');
+			panel.classList.remove('hidden');
+			panel.classList.add('flex');
+			bg.classList.remove('hidden');
+			if (openIcon && closeIcon) {
+				openIcon.classList.add('hidden');
+				openIcon.classList.remove('block');
+				closeIcon.classList.remove('hidden');
+				closeIcon.classList.add('block');
+			}
+			document.body.classList.add('overflow-hidden');
+		}
+
+		function closeMenu() {
+			btn.setAttribute('aria-expanded', 'false');
+			btn.setAttribute('aria-label', 'Open navigation menu');
+			panel.classList.add('hidden');
+			panel.classList.remove('flex');
+			bg.classList.add('hidden');
+			if (openIcon && closeIcon) {
+				openIcon.classList.remove('hidden');
+				openIcon.classList.add('block');
+				closeIcon.classList.add('hidden');
+				closeIcon.classList.remove('block');
+			}
+			document.body.classList.remove('overflow-hidden');
+		}
+
+		btn.addEventListener('click', () => {
+			const isOpen = btn.getAttribute('aria-expanded') === 'true';
+			if (isOpen) {
+				closeMenu();
+			} else {
+				openMenu();
+			}
+		});
+
+		bg.addEventListener('click', closeMenu);
+
+		// Close on Escape key
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && btn.getAttribute('aria-expanded') === 'true') {
+				closeMenu();
+				btn.focus();
+			}
+		});
+
+		// Close when a nav link is clicked
+		document.querySelectorAll('.mobile-nav-link').forEach((link) => {
+			link.addEventListener('click', closeMenu);
+		});
+	}
+
+	setupMobileNav();
+	document.addEventListener('astro:page-load', setupMobileNav);
+</script>

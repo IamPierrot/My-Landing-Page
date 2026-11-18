@@ -1,0 +1,249 @@
+---
+import { Clock, ChevronUp, ChevronDown } from 'lucide-astro';
+
+interface Props {
+	class?: string;
+	readingTime?: string;
+}
+
+const { class: className = '', readingTime } = Astro.props;
+---
+
+<div class:list={['reading-progress-widget flex flex-col gap-2.5 p-3.5 rounded-lg bg-[#101A2B]/90 border border-[#243752] shadow-sm select-none', className]}>
+	<div class="flex items-center justify-between text-xs font-mono text-[#8FA6C2]">
+		<span class="text-[11px] text-[#546C8E] uppercase tracking-wider font-semibold">Reading Progress</span>
+		<span id="reading-progress-text" class="text-[11px] text-[#38BDF8] font-bold">0% READ</span>
+	</div>
+
+	<!-- Interactive Scrubber Track to dynamically move main blog content scroller -->
+	<div
+		id="reading-progress-track"
+		role="slider"
+		aria-label="Article reading progress scrubber"
+		aria-valuemin="0"
+		aria-valuemax="100"
+		aria-valuenow="0"
+		tabindex="0"
+		class="group/track relative w-full h-2.5 bg-[#080D18] rounded-full border border-[#243752]/80 hover:border-[#38BDF8]/60 cursor-pointer transition-colors overflow-visible"
+		title="Click or drag to dynamically scroll article"
+	>
+		<div
+			id="reading-progress-bar"
+			class="h-full bg-gradient-to-r from-[#0284C7] via-[#38BDF8] to-[#7DD3FC] rounded-full transition-all duration-75 relative pointer-events-none"
+			style="width: 0%;"
+		>
+			<!-- Glowing Scrubber Knob -->
+			<span
+				id="reading-progress-thumb"
+				class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#38BDF8] border-2 border-[#080D18] shadow-[0_0_10px_rgba(56,189,248,0.9)] transition-transform duration-150 group-hover/track:scale-125"
+			></span>
+		</div>
+	</div>
+
+	<!-- Bottom Row: Reading Time + Next/Prev Section Steppers -->
+	<div class="flex items-center justify-between text-[11px] font-mono text-[#546C8E] pt-1 border-t border-[#243752]/40">
+		<div class="flex items-center gap-1.5">
+			<Clock class="w-3.5 h-3.5 text-[#38BDF8]" />
+			<span>{readingTime ? `Est. ${readingTime}` : 'Article'}</span>
+		</div>
+
+		<!-- Stepper buttons to move main blog scroller section by section -->
+		<div class="flex items-center gap-1">
+			<button
+				id="scroll-prev-section-btn"
+				type="button"
+				class="p-1 rounded bg-[#16233B] hover:bg-[#1C2C47] text-[#8FA6C2] hover:text-[#38BDF8] border border-[#243752] hover:border-[#38BDF8]/40 transition-colors cursor-pointer"
+				title="Scroll to previous section"
+				aria-label="Previous section"
+			>
+				<ChevronUp class="w-3.5 h-3.5" />
+			</button>
+
+			<button
+				id="scroll-next-section-btn"
+				type="button"
+				class="p-1 rounded bg-[#16233B] hover:bg-[#1C2C47] text-[#8FA6C2] hover:text-[#38BDF8] border border-[#243752] hover:border-[#38BDF8]/40 transition-colors cursor-pointer"
+				title="Scroll to next section"
+				aria-label="Next section"
+			>
+				<ChevronDown class="w-3.5 h-3.5" />
+			</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	function setupInteractiveReadingProgress() {
+		const track = document.getElementById('reading-progress-track');
+		const progressBar = document.getElementById('reading-progress-bar');
+		const progressText = document.getElementById('reading-progress-text');
+		const prevBtn = document.getElementById('scroll-prev-section-btn');
+		const nextBtn = document.getElementById('scroll-next-section-btn');
+		const article = document.querySelector('article') || document.querySelector('main');
+
+		if (!track || !progressBar || !progressText || !article) return;
+
+		const elTrack = track;
+		const elProgressBar = progressBar;
+		const elProgressText = progressText;
+		const elArticle = article;
+
+		let isTicking = false;
+		let isDragging = false;
+
+		function getArticleMetrics() {
+			const articleRect = elArticle.getBoundingClientRect();
+			const articleTop = window.scrollY + articleRect.top;
+			const articleHeight = elArticle.offsetHeight;
+			const windowHeight = window.innerHeight;
+			const totalScrollableDistance = Math.max(1, articleHeight - windowHeight * 0.6);
+			return { articleTop, totalScrollableDistance };
+		}
+
+		// Update reading progress bar based on main blog content scroller
+		function updateProgress() {
+			const { articleTop, totalScrollableDistance } = getArticleMetrics();
+			const scrolledPastArticleTop = window.scrollY - (articleTop - 90);
+
+			let progress = 0;
+			if (totalScrollableDistance > 0) {
+				progress = Math.min(100, Math.max(0, Math.round((scrolledPastArticleTop / totalScrollableDistance) * 100)));
+			}
+
+			elProgressBar.style.width = `${progress}%`;
+			elTrack.setAttribute('aria-valuenow', String(progress));
+
+			if (progress >= 100) {
+				elProgressText.textContent = '100% COMPLETE';
+				elProgressText.classList.add('text-[#38BDF8]');
+			} else {
+				elProgressText.textContent = `${progress}% READ`;
+				elProgressText.classList.remove('text-[#38BDF8]');
+			}
+		}
+
+		function onScroll() {
+			if (!isTicking && !isDragging) {
+				isTicking = true;
+				requestAnimationFrame(() => {
+					updateProgress();
+					isTicking = false;
+				});
+			}
+		}
+
+		// Dynamically move the main blog content scroller from scrubber position
+		function scrollMainContentToPercent(percent: number, smooth: boolean = true) {
+			const { articleTop, totalScrollableDistance } = getArticleMetrics();
+			const targetScrollY = articleTop - 90 + (totalScrollableDistance * percent);
+
+			window.scrollTo({
+				top: Math.max(0, targetScrollY),
+				behavior: smooth ? 'smooth' : 'auto',
+			});
+
+			elProgressBar.style.width = `${Math.round(percent * 100)}%`;
+			elProgressText.textContent = `${Math.round(percent * 100)}% READ`;
+		}
+
+		function handleTrackClickOrDrag(clientX: number, smooth: boolean = true) {
+			const rect = elTrack.getBoundingClientRect();
+			const clickX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+			const percent = rect.width > 0 ? clickX / rect.width : 0;
+			scrollMainContentToPercent(percent, smooth);
+		}
+
+		// Scrubber event listeners
+		elTrack.addEventListener('mousedown', (e) => {
+			isDragging = true;
+			handleTrackClickOrDrag(e.clientX, false);
+
+			const onMouseMove = (moveEvent: MouseEvent) => {
+				if (!isDragging) return;
+				handleTrackClickOrDrag(moveEvent.clientX, false);
+			};
+
+			const onMouseUp = () => {
+				isDragging = false;
+				window.removeEventListener('mousemove', onMouseMove);
+				window.removeEventListener('mouseup', onMouseUp);
+				updateProgress();
+			};
+
+			window.addEventListener('mousemove', onMouseMove);
+			window.addEventListener('mouseup', onMouseUp);
+		});
+
+		// Touch scrubbing for mobile / tablet
+		elTrack.addEventListener('touchstart', (e) => {
+			if (e.touches.length === 0) return;
+			isDragging = true;
+			handleTrackClickOrDrag(e.touches[0].clientX, false);
+
+			const onTouchMove = (touchMoveEvent: TouchEvent) => {
+				if (!isDragging || touchMoveEvent.touches.length === 0) return;
+				handleTrackClickOrDrag(touchMoveEvent.touches[0].clientX, false);
+			};
+
+			const onTouchEnd = () => {
+				isDragging = false;
+				window.removeEventListener('touchmove', onTouchMove);
+				window.removeEventListener('touchend', onTouchEnd);
+				updateProgress();
+			};
+
+			window.addEventListener('touchmove', onTouchMove, { passive: true });
+			window.addEventListener('touchend', onTouchEnd);
+		}, { passive: true });
+
+		// Section Steppers: Jump to previous / next heading dynamically
+		function getHeadings() {
+			return Array.from(elArticle.querySelectorAll<HTMLElement>('h2, h3'))
+				.filter((h) => Boolean(h.id));
+		}
+
+		function getActiveHeadingIndex(headings: HTMLElement[]) {
+			const scrollPos = window.scrollY + 120;
+			for (let i = headings.length - 1; i >= 0; i--) {
+				const rect = headings[i].getBoundingClientRect();
+				const top = rect.top + window.scrollY;
+				if (top <= scrollPos) {
+					return i;
+				}
+			}
+			return 0;
+		}
+
+		function scrollToHeadingIndex(index: number) {
+			const headings = getHeadings();
+			if (headings.length === 0) return;
+			const targetIndex = Math.max(0, Math.min(headings.length - 1, index));
+			const targetHeading = headings[targetIndex];
+
+			const headerOffset = 90;
+			const elementTop = targetHeading.getBoundingClientRect().top + window.scrollY;
+			window.scrollTo({
+				top: elementTop - headerOffset,
+				behavior: 'smooth',
+			});
+		}
+
+		prevBtn?.addEventListener('click', () => {
+			const headings = getHeadings();
+			const currentIndex = getActiveHeadingIndex(headings);
+			scrollToHeadingIndex(currentIndex - 1);
+		});
+
+		nextBtn?.addEventListener('click', () => {
+			const headings = getHeadings();
+			const currentIndex = getActiveHeadingIndex(headings);
+			scrollToHeadingIndex(currentIndex + 1);
+		});
+
+		window.addEventListener('scroll', onScroll, { passive: true });
+		updateProgress();
+	}
+
+	setupInteractiveReadingProgress();
+	document.addEventListener('astro:page-load', setupInteractiveReadingProgress);
+</script>

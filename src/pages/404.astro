@@ -1,0 +1,52 @@
+---
+import { AlertTriangle, ArrowLeft, BookOpen } from 'lucide-astro';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`404 // ${SITE_TITLE}`}
+			description="404 - Requested resource could not be found."
+		/>
+	</head>
+	<body class="bg-[#080D18] text-[#DCE8F5] antialiased">
+		<Header />
+		<main data-animate="scale-in" class="w-full max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24 flex flex-col items-center justify-center text-center">
+			<div class="inline-flex items-center gap-2 bg-[#F43F5E]/10 border border-[#F43F5E]/30 px-3 py-1.5 rounded-md font-mono text-xs text-[#F43F5E] mb-6 shadow-sm">
+				<AlertTriangle class="w-3.5 h-3.5" />
+				<span>STATUS: 404_TARGET_NOT_FOUND</span>
+			</div>
+
+			<h1 class="text-3xl sm:text-5xl font-bold tracking-tight text-[#DCE8F5] mb-4">
+				404: Endpoint Not Found
+			</h1>
+
+			<p class="text-base text-[#8FA6C2] max-w-md leading-relaxed mb-8">
+				The requested resource or document does not exist in this directory tree. It may have been moved, renamed, or redacted during triage.
+			</p>
+
+			<div class="flex items-center flex-wrap justify-center gap-3">
+				<a
+					href="/"
+					class="inline-flex items-center gap-2 font-mono text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-md bg-[#38BDF8] text-[#080D18] hover:bg-[#7DD3FC] transition-all duration-150 hover:shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:-translate-y-0.5"
+				>
+					<ArrowLeft class="w-4 h-4" />
+					Return to Workspace
+				</a>
+				<a
+					href="/blog"
+					class="inline-flex items-center gap-2 font-mono text-xs sm:text-sm font-medium px-4 py-2.5 rounded-md bg-[#101A2B] text-[#DCE8F5] border border-[#243752] hover:bg-[#16233B] hover:border-[#38BDF8]/40 hover:text-[#38BDF8] transition-all hover:-translate-y-0.5"
+				>
+					<BookOpen class="w-4 h-4" />
+					Browse Technical Notes
+				</a>
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>

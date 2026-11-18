@@ -1,0 +1,241 @@
+---
+import SidebarSection from './SidebarSection.astro';
+import SidebarLink from './SidebarLink.astro';
+
+interface Heading {
+	depth: number;
+	slug: string;
+	text: string;
+}
+
+interface Props {
+	headings: Heading[];
+	class?: string;
+	title?: string;
+}
+
+const {
+	headings,
+	class: className = '',
+	title = 'ON THIS PAGE',
+} = Astro.props;
+
+// Filter for H2 and H3
+let h2Index = 0;
+let h3Index = 0;
+
+const processedHeadings = (headings || [])
+	.filter((h) => h.depth === 2 || h.depth === 3)
+	.map((h) => {
+		let num = '';
+		let label = h.text;
+
+		// Extract existing number if user prefixed heading with "1. ", "2. ", etc.
+		const match = h.text.match(/^(\d+(?:\.\d+)*)\.?\s*(.+)$/);
+		if (match) {
+			num = match[1];
+			label = match[2];
+			if (h.depth === 2) {
+				num = num.padStart(2, '0');
+			}
+		} else {
+			if (h.depth === 2) {
+				h2Index++;
+				h3Index = 0;
+				num = String(h2Index).padStart(2, '0');
+			} else {
+				h3Index++;
+				num = `${h2Index}.${h3Index}`;
+			}
+		}
+
+		return {
+			...h,
+			displayNumber: num,
+			displayText: label,
+		};
+	});
+---
+
+{
+	processedHeadings.length > 0 && (
+		<nav
+			class:list={['toc-nav flex flex-col', className]}
+			aria-label="Table of contents"
+		>
+			<SidebarSection title={title}>
+				<span slot="badge" class="font-mono text-[10px] text-[#38BDF8] bg-[#38BDF8]/10 px-1.5 py-0.5 rounded border border-[#38BDF8]/20">
+					{processedHeadings.length} SECTIONS
+				</span>
+
+				<div class="toc-links-list relative flex flex-col gap-0.5 mt-1">
+					<!-- Dynamic Active Gliding Indicator Bar -->
+					<div
+						id="toc-active-indicator"
+						class="absolute left-0 w-1 bg-[#38BDF8] rounded-full shadow-[0_0_10px_rgba(56,189,248,0.8)] transition-all duration-200 pointer-events-none opacity-0"
+						style="top: 0; height: 32px;"
+					></div>
+
+					{processedHeadings.map((h) => (
+						<SidebarLink
+							href={`#${h.slug}`}
+							depth={h.depth === 3 ? 1 : 0}
+							number={h.displayNumber}
+							class="toc-entry transition-colors relative"
+						>
+							{h.displayText}
+						</SidebarLink>
+					))}
+				</div>
+			</SidebarSection>
+		</nav>
+	)
+}
+
+<script>
+	function setupTOCSpy() {
+		const tocLinks = document.querySelectorAll<HTMLAnchorElement>('.toc-nav a.toc-entry');
+		if (tocLinks.length === 0) return;
+
+		const headingIds = Array.from(tocLinks)
+			.map((link) => link.getAttribute('href')?.replace('#', ''))
+			.filter(Boolean) as string[];
+
+		const headingElements = headingIds
+			.map((id) => document.getElementById(id))
+			.filter((el): el is HTMLElement => el !== null);
+
+		if (headingElements.length === 0) return;
+
+		let activeId = headingIds[0];
+
+		// 1. Smooth scroll with sticky nav offset on click (moves the main blog content scroller)
+		tocLinks.forEach((link) => {
+			link.addEventListener('click', (e) => {
+				const targetId = link.getAttribute('href')?.replace('#', '');
+				if (!targetId) return;
+
+				const targetElement = document.getElementById(targetId);
+				if (targetElement) {
+					e.preventDefault();
+					const headerOffset = 90; // offset for sticky navigation
+					const elementTop = targetElement.getBoundingClientRect().top + window.scrollY;
+
+					window.scrollTo({
+						top: Math.max(0, elementTop - headerOffset),
+						behavior: 'smooth',
+					});
+
+					// Update URL hash quietly without jump
+					history.pushState(null, '', `#${targetId}`);
+					setActiveLink(targetId);
+				}
+			});
+		});
+
+		// 2. Set Active Link & Dynamically Move Sidebar Scroller
+		function setActiveLink(id: string) {
+			activeId = id;
+			let activeLinkElement: HTMLAnchorElement | null = null;
+
+			tocLinks.forEach((link) => {
+				const href = link.getAttribute('href');
+				const isCurrent = href === `#${id}`;
+
+				if (isCurrent) {
+					activeLinkElement = link;
+					link.setAttribute('aria-current', 'true');
+					link.classList.add('text-[#38BDF8]', 'bg-[#38BDF8]/10', 'font-semibold');
+					link.classList.remove('text-[#8FA6C2]');
+
+					// Synchronize mobile trigger title if present
+					const mobileTitleEl = document.getElementById('mobile-toc-current-label');
+					if (mobileTitleEl) {
+						mobileTitleEl.textContent = link.textContent?.trim() || id;
+					}
+				} else {
+					link.removeAttribute('aria-current');
+					link.classList.remove('text-[#38BDF8]', 'bg-[#38BDF8]/10', 'font-semibold');
+					link.classList.add('text-[#8FA6C2]');
+				}
+			});
+
+			// Move the dynamic active indicator bar
+			if (activeLinkElement) {
+				const activeLink = activeLinkElement as HTMLAnchorElement;
+				const indicator = document.getElementById('toc-active-indicator');
+				const listParent = activeLink.closest('.toc-links-list');
+
+				if (indicator && listParent) {
+					const listRect = listParent.getBoundingClientRect();
+					const linkRect = activeLink.getBoundingClientRect();
+					indicator.style.top = `${linkRect.top - listRect.top}px`;
+					indicator.style.height = `${linkRect.height}px`;
+					indicator.style.opacity = '1';
+				}
+
+				// Dynamically scroll the sidebar container to keep active link centered
+				const desktopSidebar = activeLink.closest<HTMLElement>('aside.sidebar-desktop');
+				if (desktopSidebar) {
+					const linkRect = activeLink.getBoundingClientRect();
+					const sidebarRect = desktopSidebar.getBoundingClientRect();
+					const relativeTop = linkRect.top - sidebarRect.top;
+
+					// If active link is outside comfortable middle viewing zone (top 20% or bottom 30%)
+					if (relativeTop < 80 || relativeTop > sidebarRect.height - 130) {
+						const targetScroll = desktopSidebar.scrollTop + relativeTop - (sidebarRect.height / 2) + (linkRect.height / 2);
+						desktopSidebar.scrollTo({
+							top: Math.max(0, targetScroll),
+							behavior: 'smooth',
+						});
+					}
+				}
+			}
+		}
+
+		// 3. Scroll spy using real-time viewport bounding rect
+		let isTicking = false;
+		function onScrollSpy() {
+			if (isTicking) return;
+			isTicking = true;
+
+			requestAnimationFrame(() => {
+				isTicking = false;
+
+				// Bottom of page: activate last item
+				const atBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 60);
+				if (atBottom && headingElements.length > 0) {
+					const lastId = headingElements[headingElements.length - 1].id;
+					if (lastId !== activeId) {
+						setActiveLink(lastId);
+					}
+					return;
+				}
+
+				// Find current heading passing above threshold (120px)
+				const threshold = 120;
+				let currentId = headingElements[0]?.id;
+
+				for (let i = 0; i < headingElements.length; i++) {
+					const el = headingElements[i];
+					const rect = el.getBoundingClientRect();
+					if (rect.top <= threshold) {
+						currentId = el.id;
+					} else {
+						break;
+					}
+				}
+
+				if (currentId && currentId !== activeId) {
+					setActiveLink(currentId);
+				}
+			});
+		}
+
+		window.addEventListener('scroll', onScrollSpy, { passive: true });
+		onScrollSpy();
+	}
+
+	setupTOCSpy();
+	document.addEventListener('astro:page-load', setupTOCSpy);
+</script>

@@ -1,0 +1,36 @@
+---
+interface Props {
+	class?: string;
+	maxWidth?: string;
+	side?: 'left' | 'right';
+}
+
+const {
+	class: className = '',
+	maxWidth = 'max-w-6xl',
+	side = 'right',
+} = Astro.props;
+---
+
+<div class:list={['sidebar-layout-container w-full mx-auto px-4 sm:px-6 py-6 sm:py-10', maxWidth, className]}>
+	<!-- Optional Mobile Sidebar Top Bar / Trigger (< 1024px) -->
+	<div class="lg:hidden mb-6">
+		<slot name="mobileSidebar" />
+	</div>
+
+	<!-- Main Layout Flex: Content + Sticky Desktop Sidebar -->
+	<div
+		class:list={[
+			'flex flex-col items-start justify-between gap-8 lg:gap-12',
+			side === 'left' ? 'lg:flex-row-reverse' : 'lg:flex-row',
+		]}
+	>
+		<!-- Main Content Column -->
+		<div class="flex-1 min-w-0 w-full">
+			<slot />
+		</div>
+
+		<!-- Desktop Sticky Sidebar (>= 1024px) -->
+		<slot name="sidebar" />
+	</div>
+</div>

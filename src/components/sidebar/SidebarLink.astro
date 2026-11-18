@@ -1,0 +1,65 @@
+---
+interface Props {
+	href: string;
+	active?: boolean;
+	class?: string;
+	badge?: string | number;
+	depth?: number;
+	number?: string;
+	id?: string;
+}
+
+const {
+	href,
+	active = false,
+	class: className = '',
+	badge,
+	depth = 0,
+	number,
+	id,
+} = Astro.props;
+---
+
+<a
+	href={href}
+	id={id}
+	aria-current={active ? 'true' : undefined}
+	class:list={[
+		'sidebar-link group flex items-center justify-between gap-2 px-3 py-1.5 rounded-md font-mono text-xs transition-all duration-150',
+		depth > 0 ? 'pl-6 text-[11px]' : '',
+		active
+			? 'text-[#38BDF8] bg-[#38BDF8]/10 border-l-2 border-[#38BDF8] font-semibold'
+			: 'text-[#8FA6C2] hover:text-[#DCE8F5] hover:bg-[#16233B] border-l-2 border-transparent',
+		className,
+	]}
+>
+	<span class="flex items-center gap-2 truncate">
+		{
+			number && (
+				<span
+					class:list={[
+						'text-[10px] shrink-0',
+						active ? 'text-[#38BDF8]' : 'text-[#546C8E] group-hover:text-[#8FA6C2]',
+					]}
+				>
+					{number}
+				</span>
+			)
+		}
+		<span class="truncate"><slot /></span>
+	</span>
+	{
+		badge !== undefined && (
+			<span
+				class:list={[
+					'text-[10px] px-1.5 py-0.5 rounded shrink-0 font-mono',
+					active
+						? 'bg-[#38BDF8]/20 text-[#38BDF8]'
+						: 'bg-[#101A2B] text-[#546C8E] border border-[#243752]',
+				]}
+			>
+				{badge}
+			</span>
+		)
+	}
+</a>

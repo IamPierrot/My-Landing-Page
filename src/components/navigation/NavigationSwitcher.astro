@@ -1,0 +1,123 @@
+---
+import { Sliders, LayoutGrid, Terminal } from 'lucide-astro';
+
+interface Props {
+	variant?: 'compact' | 'segmented';
+	class?: string;
+}
+
+const { variant = 'compact', class: className = '' } = Astro.props;
+---
+
+{
+	variant === 'compact' ? (
+		<div class:list={['inline-flex items-center', className]}>
+			<button
+				type="button"
+				class="nav-style-toggle group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono text-xs sm:text-sm bg-[#16233B]/80 hover:bg-[#16233B] text-[#8FA6C2] hover:text-[#38BDF8] border border-[#243752] hover:border-[#38BDF8]/40 transition-all duration-150 cursor-pointer"
+				title="Toggle navigation style (SOC Status / Floating Dock)"
+				aria-label="Toggle navigation style"
+			>
+				<Sliders class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#38BDF8]" />
+				<span class="nav-style-label hidden lg:inline">Mode:</span>
+				<span class="nav-style-indicator font-bold text-[#DCE8F5] group-hover:text-[#38BDF8]">
+					SOC
+				</span>
+			</button>
+		</div>
+	) : (
+		<div
+			class:list={[
+				'nav-style-segmented flex items-center bg-[#080D18] p-1 rounded-lg border border-[#243752] w-full',
+				className,
+			]}
+			role="group"
+			aria-label="Navigation style options"
+		>
+			<button
+				type="button"
+				data-set-style="soc"
+				class="nav-segment-btn flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 rounded-md font-mono text-xs transition-all duration-150 cursor-pointer"
+			>
+				<Terminal class="w-3.5 h-3.5" />
+				<span>SOC Status</span>
+			</button>
+			<button
+				type="button"
+				data-set-style="floating"
+				class="nav-segment-btn flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 rounded-md font-mono text-xs transition-all duration-150 cursor-pointer"
+			>
+				<LayoutGrid class="w-3.5 h-3.5" />
+				<span>Floating Dock</span>
+			</button>
+		</div>
+	)
+}
+
+<script>
+	import { NAV_STYLE_STORAGE_KEY, DEFAULT_NAV_STYLE, type NavigationStyle } from './navigation.config';
+
+	function getStoredStyle(): NavigationStyle {
+		try {
+			const saved = localStorage.getItem(NAV_STYLE_STORAGE_KEY);
+			if (saved === 'floating' || saved === 'soc') return saved;
+		} catch (e) {
+			// localStorage unavailable
+		}
+		return DEFAULT_NAV_STYLE;
+	}
+
+	function applyNavStyle(style: NavigationStyle) {
+		document.documentElement.setAttribute('data-nav-style', style);
+		try {
+			localStorage.setItem(NAV_STYLE_STORAGE_KEY, style);
+		} catch (e) {}
+
+		// Update all indicators
+		document.querySelectorAll('.nav-style-indicator').forEach((el) => {
+			el.textContent = style === 'soc' ? 'SOC' : 'DOCK';
+		});
+
+		// Update segmented buttons
+		document.querySelectorAll('.nav-segment-btn').forEach((btn) => {
+			const targetStyle = btn.getAttribute('data-set-style');
+			if (targetStyle === style) {
+				btn.className =
+					'nav-segment-btn flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 rounded-md font-mono text-xs transition-all duration-150 bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 font-semibold shadow-sm';
+				btn.setAttribute('aria-pressed', 'true');
+			} else {
+				btn.className =
+					'nav-segment-btn flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 rounded-md font-mono text-xs transition-all duration-150 text-[#8FA6C2] hover:text-[#DCE8F5] border border-transparent';
+				btn.setAttribute('aria-pressed', 'false');
+			}
+		});
+
+		window.dispatchEvent(new CustomEvent('nav-style-changed', { detail: { style } }));
+	}
+
+	function setupSwitchers() {
+		const currentStyle = getStoredStyle();
+		applyNavStyle(currentStyle);
+
+		// Compact toggle click
+		document.querySelectorAll('.nav-style-toggle').forEach((btn) => {
+			btn.addEventListener('click', () => {
+				const current = document.documentElement.getAttribute('data-nav-style') as NavigationStyle;
+				const nextStyle: NavigationStyle = current === 'soc' ? 'floating' : 'soc';
+				applyNavStyle(nextStyle);
+			});
+		});
+
+		// Segmented buttons click
+		document.querySelectorAll('.nav-segment-btn').forEach((btn) => {
+			btn.addEventListener('click', () => {
+				const target = btn.getAttribute('data-set-style') as NavigationStyle;
+				if (target) applyNavStyle(target);
+			});
+		});
+	}
+
+	// Run on initial load and View Transitions
+	setupSwitchers();
+	document.addEventListener('astro:page-load', setupSwitchers);
+</script>

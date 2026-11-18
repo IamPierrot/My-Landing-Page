@@ -1,0 +1,284 @@
+---
+import { Image } from 'astro:assets';
+import {
+	MapPin,
+	GraduationCap,
+	ExternalLink,
+	Shield,
+	Network,
+	Cpu,
+	Server,
+	Mail,
+	Github,
+	Linkedin,
+	Terminal,
+} from 'lucide-astro';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import avatarImage from '../assets/avatar.jpg';
+import {
+	SITE_TITLE,
+	AUTHOR,
+	SOCIAL_LINKS,
+	SKILL_GROUPS,
+	EXPERIENCES,
+} from '../assets/config';
+
+const icons = {
+	Shield,
+	Network,
+	Cpu,
+	Server,
+};
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`About // ${SITE_TITLE}`}
+			description="Background, technical capabilities, and research direction of Pierrot — Computer Science student focused on SOC/DFIR and security engineering."
+		/>
+	</head>
+	<body class="bg-[#080D18] text-[#DCE8F5] antialiased">
+		<Header />
+		<main class="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+			<!-- Profile Header with Avatar -->
+			<section data-animate="fade-up" class="pb-8 border-b border-[#243752] mb-8">
+				<div class="flex flex-col-reverse sm:flex-row items-start sm:items-center justify-between gap-6">
+					<div class="flex-1">
+						<div class="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-[#8FA6C2] mb-3">
+							<span class="text-[#38BDF8] font-bold">//</span>
+							<span>Profile &amp; Background</span>
+						</div>
+
+						<h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-[#DCE8F5] mb-3">
+							About {AUTHOR.name}
+						</h1>
+
+						<p class="text-base sm:text-lg text-[#8FA6C2] leading-relaxed max-w-2xl mb-4">
+							{AUTHOR.year} at <strong class="text-[#DCE8F5] font-semibold">{AUTHOR.university}</strong> specializing in <span class="text-[#38BDF8]">{AUTHOR.major}</span>.
+						</p>
+
+						<div class="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs font-mono text-[#8FA6C2]">
+							<span class="inline-flex items-center gap-1.5">
+								<GraduationCap class="w-4 h-4 text-[#38BDF8]" />
+								<span>{AUTHOR.university}</span>
+							</span>
+							<span class="text-[#243752]">&bull;</span>
+							<span class="inline-flex items-center gap-1.5">
+								<MapPin class="w-4 h-4 text-[#38BDF8]" />
+								<span>{AUTHOR.location}</span>
+							</span>
+						</div>
+					</div>
+
+					<!-- Rounded Avatar with Status Ring -->
+					<div class="shrink-0 relative group">
+						<div
+							class="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-[#38BDF8]/40 bg-[#101A2B] shadow-[0_0_16px_rgba(56,189,248,0.2)]"
+						>
+							<Image
+								src={avatarImage}
+								alt={`${AUTHOR.name} - ${AUTHOR.fullName}`}
+								width={112}
+								height={112}
+								loading="eager"
+								class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+							/>
+						</div>
+						<span class="absolute bottom-1 right-1 flex h-3.5 w-3.5">
+							<span
+								class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#38BDF8] opacity-75"
+							></span>
+							<span
+								class="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#38BDF8] border-2 border-[#080D18]"
+							></span>
+						</span>
+					</div>
+				</div>
+			</section>
+
+			<!-- Technical Direction & Interests -->
+			<section data-animate="fade-up" class="mb-10">
+				<h2 class="font-mono text-base font-semibold text-[#DCE8F5] flex items-center gap-2 mb-4">
+					<span class="text-[#38BDF8]">//</span> Direction &amp; Focus
+				</h2>
+				<div class="bg-[#101A2B] border border-[#243752] rounded-lg p-5 sm:p-6 flex flex-col gap-3 text-[#8FA6C2] text-sm sm:text-base leading-relaxed">
+					<p>
+						I am interested in <strong class="text-[#DCE8F5]">SOC (Security Operations Center)</strong> and <strong class="text-[#DCE8F5]">DFIR (Digital Forensics &amp; Incident Response)</strong> roles. My primary technical interest is understanding attacker behavior: how adversaries gain initial access, execute code, establish persistence, and move laterally across networks.
+					</p>
+					<p>
+						I approach security with an engineering mindset — investigating anomalies through memory dumps, packet captures, and filesystem artifacts, and writing small, purpose-built tools in <strong class="text-[#DCE8F5]">Go</strong>, <strong class="text-[#DCE8F5]">C</strong>, and <strong class="text-[#DCE8F5]">Python</strong> to automate and assist detection.
+					</p>
+					<p>
+						In addition to defensive security, I have hands-on experience in <strong class="text-[#DCE8F5]">systems engineering, Linux administration, and DevSecOps</strong> (Docker, CI/CD with GitHub Actions, Nginx, and virtualization).
+					</p>
+				</div>
+			</section>
+
+			<!-- Technical Skills by Domain -->
+			<section data-animate="fade-up" class="mb-10">
+				<h2 class="font-mono text-base font-semibold text-[#DCE8F5] flex items-center gap-2 mb-4">
+					<span class="text-[#38BDF8]">//</span> Technical Capabilities
+				</h2>
+				<p class="text-xs font-mono text-[#546C8E] mb-4">
+					LABELS: <span class="text-[#38BDF8]">Used</span> = applied in projects/code &bull; <span class="text-[#8FA6C2]">Practiced</span> = verified in CTF/labs &bull; <span class="text-[#8FA6C2]">Research</span> = independent study
+				</p>
+
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+					{
+						SKILL_GROUPS.map((group) => {
+							const Icon = icons[group.iconName];
+							return (
+								<div class="bg-[#101A2B] border border-[#243752] rounded-lg p-5 flex flex-col gap-3">
+									<div class="flex items-start justify-between gap-2">
+										<div class="flex items-center gap-2 text-[#DCE8F5] font-semibold text-sm sm:text-base">
+											<Icon class="w-4 h-4 text-[#38BDF8] shrink-0" />
+											<span>{group.title}</span>
+										</div>
+										<span class="font-mono text-[10px] px-2 py-0.5 rounded bg-[#16233B] text-[#38BDF8] border border-[#38BDF8]/20 shrink-0">
+											{group.level}
+										</span>
+									</div>
+									<ul class="flex flex-col gap-1.5 text-xs font-mono text-[#8FA6C2]">
+										{group.items.map((item) => (
+											<li class="flex items-start gap-2">
+												<span class="text-[#38BDF8] mt-0.5">&bull;</span>
+												<span>{item}</span>
+											</li>
+										))}
+									</ul>
+								</div>
+							);
+						})
+					}
+				</div>
+			</section>
+
+			<!-- Education & Background -->
+			<section data-animate="fade-up" class="mb-10">
+				<h2 class="font-mono text-base font-semibold text-[#DCE8F5] flex items-center gap-2 mb-4">
+					<span class="text-[#38BDF8]">//</span> Education
+				</h2>
+				<div class="bg-[#101A2B] border border-[#243752] rounded-lg p-5 sm:p-6">
+					<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+						<div>
+							<h3 class="text-base sm:text-lg font-semibold text-[#DCE8F5]">
+								{AUTHOR.university}
+							</h3>
+							<div class="font-mono text-xs text-[#38BDF8] mt-0.5">
+								{AUTHOR.faculty} &bull; {AUTHOR.major}
+							</div>
+						</div>
+						<span class="font-mono text-xs px-2.5 py-1 rounded bg-[#16233B] text-[#8FA6C2] border border-[#243752] self-start sm:self-auto">
+							2023 - Present
+						</span>
+					</div>
+					<div class="text-xs font-mono text-[#8FA6C2] flex flex-wrap gap-x-4 gap-y-1 pt-2 border-t border-[#243752]/60">
+						<span>Degree: Bachelor of Engineering (Computer Science)</span>
+						<span class="text-[#243752]">&bull;</span>
+						<span>Status: {AUTHOR.year}</span>
+					</div>
+				</div>
+			</section>
+
+			<!-- Experience & Community -->
+			<section data-animate="fade-up" class="mb-10">
+				<h2 class="font-mono text-base font-semibold text-[#DCE8F5] flex items-center gap-2 mb-4">
+					<span class="text-[#38BDF8]">//</span> Experience &amp; Community
+				</h2>
+				<div class="flex flex-col gap-4">
+					{
+						EXPERIENCES.map((exp) => (
+							<div class="bg-[#101A2B] border border-[#243752] rounded-lg p-5 sm:p-6 transition-all duration-200 hover:border-[#38BDF8]/40 hover:bg-[#16233B]">
+								<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+									<div class="flex items-center gap-2">
+										<h3 class="text-base sm:text-lg font-semibold text-[#DCE8F5]">
+											{exp.url ? (
+												<a
+													href={exp.url}
+													target="_blank"
+													rel="noreferrer noopener"
+													class="hover:text-[#38BDF8] transition-colors inline-flex items-center gap-1.5"
+												>
+													{exp.title}
+													<ExternalLink class="w-3.5 h-3.5 opacity-60" />
+												</a>
+											) : (
+												exp.title
+											)}
+										</h3>
+									</div>
+									<span class="font-mono text-xs px-2.5 py-1 rounded bg-[#16233B] text-[#8FA6C2] border border-[#243752] self-start sm:self-auto">
+										{exp.period}
+									</span>
+								</div>
+
+								<div class="font-mono text-xs text-[#38BDF8] mb-2">
+									{exp.role} &bull; {exp.location}
+								</div>
+
+								<p class="text-sm text-[#8FA6C2] leading-relaxed">
+									{exp.description}
+								</p>
+							</div>
+						))
+					}
+				</div>
+			</section>
+
+			<!-- Connect & Verify -->
+			<section data-animate="fade-up">
+				<h2 class="font-mono text-base font-semibold text-[#DCE8F5] flex items-center gap-2 mb-4">
+					<span class="text-[#38BDF8]">//</span> Connect &amp; Verify
+				</h2>
+				<p class="text-sm sm:text-base text-[#8FA6C2] mb-5">
+					I believe technical claims should be backed by code, reproducible labs, and public artifacts:
+				</p>
+				<div class="flex items-center flex-wrap gap-3">
+					<a
+						href={SOCIAL_LINKS.github.url}
+						target="_blank"
+						rel="noreferrer noopener"
+						class="inline-flex items-center gap-2 font-mono text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-md bg-[#101A2B] text-[#DCE8F5] border border-[#243752] hover:bg-[#16233B] hover:border-[#38BDF8]/40 hover:text-[#38BDF8] transition-all hover:-translate-y-0.5"
+					>
+						<Github class="w-4 h-4" />
+						GitHub: {SOCIAL_LINKS.github.username}
+					</a>
+
+					<a
+						href={SOCIAL_LINKS.hackthebox.url}
+						target="_blank"
+						rel="noreferrer noopener"
+						class="inline-flex items-center gap-2 font-mono text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-md bg-[#101A2B] text-[#DCE8F5] border border-[#243752] hover:bg-[#16233B] hover:border-[#38BDF8]/40 hover:text-[#38BDF8] transition-all hover:-translate-y-0.5"
+						title={SOCIAL_LINKS.hackthebox.handle}
+					>
+						<Terminal class="w-4 h-4 text-[#38BDF8]" />
+						HTB: {SOCIAL_LINKS.hackthebox.handle}
+					</a>
+
+					<a
+						href={SOCIAL_LINKS.linkedin.url}
+						target="_blank"
+						rel="noreferrer noopener"
+						class="inline-flex items-center gap-2 font-mono text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-md bg-[#101A2B] text-[#DCE8F5] border border-[#243752] hover:bg-[#16233B] hover:border-[#38BDF8]/40 hover:text-[#38BDF8] transition-all hover:-translate-y-0.5"
+					>
+						<Linkedin class="w-4 h-4" />
+						LinkedIn Profile
+					</a>
+
+					<a
+						href={SOCIAL_LINKS.email.url}
+						class="inline-flex items-center gap-2 font-mono text-xs sm:text-sm px-4 py-2.5 text-[#8FA6C2] hover:text-[#38BDF8] transition-colors"
+					>
+						<Mail class="w-4 h-4" />
+						Email: {SOCIAL_LINKS.email.address}
+					</a>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

@@ -1,0 +1,153 @@
+---
+import { ListOrdered, X, Filter } from 'lucide-astro';
+
+interface Props {
+	title?: string;
+	type?: 'toc' | 'filters';
+	class?: string;
+}
+
+const {
+	title = 'On this page',
+	type = 'toc',
+	class: className = '',
+} = Astro.props;
+---
+
+<div class:list={['mobile-sidebar-wrapper', className]}>
+	<!-- Compact Mobile Trigger Bar -->
+	<button
+		id="mobile-sidebar-trigger"
+		type="button"
+		class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg bg-[#101A2B] border border-[#243752] hover:border-[#38BDF8]/40 text-xs font-mono transition-all duration-150 shadow-sm cursor-pointer"
+		aria-expanded="false"
+		aria-controls="mobile-sidebar-drawer"
+		aria-label={`Open ${title}`}
+	>
+		<div class="flex items-center gap-2 text-[#DCE8F5] truncate">
+			{
+				type === 'toc' ? (
+					<ListOrdered class="w-4 h-4 text-[#38BDF8] shrink-0" />
+				) : (
+					<Filter class="w-4 h-4 text-[#38BDF8] shrink-0" />
+				)
+			}
+			<span class="text-[#546C8E] uppercase tracking-wider text-[11px] font-semibold shrink-0">
+				{title}:
+			</span>
+			<span id="mobile-toc-current-label" class="text-[#38BDF8] truncate font-medium">
+				Overview
+			</span>
+		</div>
+
+		<span class="text-[11px] text-[#546C8E] bg-[#16233B] border border-[#243752] px-2 py-0.5 rounded font-mono shrink-0 ml-2">
+			TAP TO EXPAND
+		</span>
+	</button>
+
+	<!-- Backdrop Overlay -->
+	<div
+		id="mobile-sidebar-backdrop"
+		class="hidden fixed inset-0 bg-[#080D18]/80 backdrop-blur-sm z-[9998] transition-opacity duration-200"
+		aria-hidden="true"
+	>
+	</div>
+
+	<!-- Slide-out Drawer Panel -->
+	<div
+		id="mobile-sidebar-drawer"
+		class="hidden fixed inset-x-0 bottom-0 max-h-[85vh] bg-[#101A2B] border-t border-[#243752] rounded-t-2xl z-[9999] p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] overflow-y-auto flex-col gap-4 animate-fade-in"
+		role="dialog"
+		aria-modal="true"
+		aria-label={title}
+	>
+		<!-- Header -->
+		<div class="flex items-center justify-between pb-3 border-b border-[#243752]">
+			<div class="flex items-center gap-2">
+				{
+					type === 'toc' ? (
+						<ListOrdered class="w-4 h-4 text-[#38BDF8]" />
+					) : (
+						<Filter class="w-4 h-4 text-[#38BDF8]" />
+					)
+				}
+				<span class="font-mono text-sm font-bold text-[#DCE8F5] tracking-wide">
+					{title}
+				</span>
+			</div>
+
+			<button
+				id="mobile-sidebar-close"
+				type="button"
+				class="w-8 h-8 rounded-md bg-[#16233B] border border-[#243752] flex items-center justify-center text-[#8FA6C2] hover:text-[#38BDF8] hover:border-[#38BDF8]/40 transition-colors cursor-pointer"
+				aria-label="Close panel"
+			>
+				<X class="w-4 h-4" />
+			</button>
+		</div>
+
+		<!-- Drawer Content -->
+		<div class="drawer-content flex flex-col gap-4">
+			<slot />
+		</div>
+	</div>
+</div>
+
+<script>
+	function setupMobileSidebar() {
+		const trigger = document.getElementById('mobile-sidebar-trigger');
+		const drawer = document.getElementById('mobile-sidebar-drawer');
+		const backdrop = document.getElementById('mobile-sidebar-backdrop');
+		const closeBtn = document.getElementById('mobile-sidebar-close');
+
+		if (!trigger || !drawer || !backdrop) return;
+
+		const triggerEl: HTMLElement = trigger;
+		const drawerEl: HTMLElement = drawer;
+		const backdropEl: HTMLElement = backdrop;
+
+		let isOpen = false;
+
+		function openDrawer() {
+			isOpen = true;
+			triggerEl.setAttribute('aria-expanded', 'true');
+			drawerEl.classList.remove('hidden');
+			drawerEl.classList.add('flex');
+			backdropEl.classList.remove('hidden');
+			document.body.style.overflow = 'hidden';
+		}
+
+		function closeDrawer() {
+			isOpen = false;
+			triggerEl.setAttribute('aria-expanded', 'false');
+			drawerEl.classList.add('hidden');
+			drawerEl.classList.remove('flex');
+			backdropEl.classList.add('hidden');
+			document.body.style.overflow = '';
+		}
+
+		triggerEl.addEventListener('click', () => {
+			if (isOpen) closeDrawer();
+			else openDrawer();
+		});
+
+		backdropEl.addEventListener('click', closeDrawer);
+		if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+
+		window.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && isOpen) {
+				closeDrawer();
+			}
+		});
+
+		// Auto close when an anchor inside the drawer is clicked
+		drawerEl.querySelectorAll('a').forEach((link) => {
+			link.addEventListener('click', () => {
+				closeDrawer();
+			});
+		});
+	}
+
+	setupMobileSidebar();
+	document.addEventListener('astro:page-load', setupMobileSidebar);
+</script>

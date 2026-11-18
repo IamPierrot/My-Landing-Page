@@ -1,0 +1,340 @@
+---
+import { Filter, RotateCcw } from 'lucide-astro';
+import SidebarSection from './SidebarSection.astro';
+
+interface Props {
+	categories: string[];
+	technologies: string[];
+	statuses: string[];
+	totalCount: number;
+	class?: string;
+}
+
+const {
+	categories = [],
+	technologies = [],
+	statuses = [],
+	totalCount = 0,
+	class: className = '',
+} = Astro.props;
+---
+
+<div class:list={['project-filters-panel flex flex-col gap-6', className]}>
+	<!-- Filter Header & Reset Action -->
+	<div class="flex items-center justify-between pb-3 border-b border-[#243752]">
+		<div class="flex items-center gap-2">
+			<Filter class="w-4 h-4 text-[#38BDF8]" />
+			<span class="font-mono text-xs uppercase tracking-wider text-[#DCE8F5] font-semibold">
+				Filter Projects
+			</span>
+		</div>
+
+		<button
+			id="filter-reset-btn"
+			type="button"
+			class="hidden items-center gap-1 font-mono text-[11px] text-[#8FA6C2] hover:text-[#38BDF8] transition-colors cursor-pointer"
+			title="Reset all active filters"
+		>
+			<RotateCcw class="w-3 h-3" />
+			<span>Reset</span>
+		</button>
+	</div>
+
+	<!-- Live Match Counter Badge -->
+	<div class="bg-[#101A2B] border border-[#243752] rounded-md px-3 py-2 flex items-center justify-between font-mono text-xs text-[#8FA6C2]">
+		<span class="text-[11px] text-[#546C8E] uppercase tracking-wider">Matches</span>
+		<span id="filter-match-count" class="text-[#38BDF8] font-bold">
+			{totalCount} / {totalCount}
+		</span>
+	</div>
+
+	<!-- Category Filter -->
+	<SidebarSection title="Categories">
+		<div class="flex flex-col gap-1" role="radiogroup" aria-label="Filter by category">
+			<button
+				type="button"
+				data-filter-category="all"
+				class="filter-category-btn active flex items-center justify-between px-3 py-1.5 rounded-md font-mono text-xs transition-all duration-150 text-[#38BDF8] bg-[#38BDF8]/10 border-l-2 border-[#38BDF8] font-semibold text-left cursor-pointer"
+			>
+				<span>All Categories</span>
+				<span class="text-[10px] text-[#546C8E] font-mono">{totalCount}</span>
+			</button>
+
+			{
+				categories.map((cat) => (
+					<button
+						type="button"
+						data-filter-category={cat}
+						class="filter-category-btn flex items-center justify-between px-3 py-1.5 rounded-md font-mono text-xs transition-all duration-150 text-[#8FA6C2] hover:text-[#DCE8F5] hover:bg-[#16233B] border-l-2 border-transparent text-left cursor-pointer"
+					>
+						<span class="truncate">{cat}</span>
+					</button>
+				))
+			}
+		</div>
+	</SidebarSection>
+
+	<!-- Status Filter -->
+	{
+		statuses.length > 0 && (
+			<SidebarSection title="Project Status">
+				<div class="flex flex-wrap gap-1.5">
+					<button
+						type="button"
+						data-filter-status="all"
+						class="filter-status-btn active px-2.5 py-1 rounded font-mono text-[11px] transition-all duration-150 bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 font-semibold cursor-pointer"
+					>
+						All
+					</button>
+					{statuses.map((st) => (
+						<button
+							type="button"
+							data-filter-status={st}
+							class="filter-status-btn px-2.5 py-1 rounded font-mono text-[11px] transition-all duration-150 bg-[#101A2B] text-[#8FA6C2] hover:text-[#DCE8F5] hover:bg-[#16233B] border border-[#243752] cursor-pointer"
+						>
+							{st}
+						</button>
+					))}
+				</div>
+			</SidebarSection>
+		)
+	}
+
+	<!-- Technology Filter Tags -->
+	{
+		technologies.length > 0 && (
+			<SidebarSection title="Technologies">
+				<div class="flex flex-wrap gap-1.5 pt-1">
+					{technologies.map((tech) => (
+						<button
+							type="button"
+							data-filter-tech={tech}
+							class="filter-tech-btn px-2 py-0.5 rounded font-mono text-[11px] transition-all duration-150 bg-[#080D18] text-[#8FA6C2] hover:text-[#38BDF8] hover:border-[#38BDF8]/40 border border-[#243752] cursor-pointer"
+						>
+							{tech}
+						</button>
+					))}
+				</div>
+			</SidebarSection>
+		)
+	}
+</div>
+
+<script>
+	function setupProjectFiltering() {
+		const categoryBtns = document.querySelectorAll<HTMLButtonElement>('[data-filter-category]');
+		const statusBtns = document.querySelectorAll<HTMLButtonElement>('[data-filter-status]');
+		const techBtns = document.querySelectorAll<HTMLButtonElement>('[data-filter-tech]');
+		const resetBtn = document.getElementById('filter-reset-btn');
+		const matchCountEl = document.getElementById('filter-match-count');
+		const projectCards = document.querySelectorAll<HTMLElement>('.project-card');
+		const emptyState = document.getElementById('projects-empty-state');
+
+		if (projectCards.length === 0) return;
+
+		let selectedCategory = 'all';
+		let selectedStatus = 'all';
+		let selectedTechs: Set<string> = new Set();
+
+		// 1. Parse initial state from URL parameters
+		try {
+			const urlParams = new URLSearchParams(window.location.search);
+			const catParam = urlParams.get('category');
+			const statusParam = urlParams.get('status');
+			const techParam = urlParams.get('tech');
+
+			if (catParam) selectedCategory = catParam;
+			if (statusParam) selectedStatus = statusParam;
+			if (techParam) {
+				techParam.split(',').forEach((t) => selectedTechs.add(t.trim()));
+			}
+		} catch (e) {}
+
+		function updateUrlParams() {
+			try {
+				const url = new URL(window.location.href);
+				if (selectedCategory && selectedCategory !== 'all') {
+					url.searchParams.set('category', selectedCategory);
+				} else {
+					url.searchParams.delete('category');
+				}
+
+				if (selectedStatus && selectedStatus !== 'all') {
+					url.searchParams.set('status', selectedStatus);
+				} else {
+					url.searchParams.delete('status');
+				}
+
+				if (selectedTechs.size > 0) {
+					url.searchParams.set('tech', Array.from(selectedTechs).join(','));
+				} else {
+					url.searchParams.delete('tech');
+				}
+
+				window.history.replaceState({}, '', url.toString());
+			} catch (e) {}
+		}
+
+		function updateUI() {
+			// Update Category Buttons
+			categoryBtns.forEach((btn) => {
+				const cat = btn.getAttribute('data-filter-category');
+				const isActive = cat === selectedCategory;
+				if (isActive) {
+					btn.className =
+						'filter-category-btn active flex items-center justify-between px-3 py-1.5 rounded-md font-mono text-xs transition-all duration-150 text-[#38BDF8] bg-[#38BDF8]/10 border-l-2 border-[#38BDF8] font-semibold text-left cursor-pointer';
+				} else {
+					btn.className =
+						'filter-category-btn flex items-center justify-between px-3 py-1.5 rounded-md font-mono text-xs transition-all duration-150 text-[#8FA6C2] hover:text-[#DCE8F5] hover:bg-[#16233B] border-l-2 border-transparent text-left cursor-pointer';
+				}
+			});
+
+			// Update Status Buttons
+			statusBtns.forEach((btn) => {
+				const st = btn.getAttribute('data-filter-status');
+				const isActive = st === selectedStatus;
+				if (isActive) {
+					btn.className =
+						'filter-status-btn active px-2.5 py-1 rounded font-mono text-[11px] transition-all duration-150 bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 font-semibold cursor-pointer';
+				} else {
+					btn.className =
+						'filter-status-btn px-2.5 py-1 rounded font-mono text-[11px] transition-all duration-150 bg-[#101A2B] text-[#8FA6C2] hover:text-[#DCE8F5] hover:bg-[#16233B] border border-[#243752] cursor-pointer';
+				}
+			});
+
+			// Update Tech Buttons
+			techBtns.forEach((btn) => {
+				const tech = btn.getAttribute('data-filter-tech') || '';
+				const isActive = selectedTechs.has(tech);
+				if (isActive) {
+					btn.className =
+						'filter-tech-btn px-2 py-0.5 rounded font-mono text-[11px] transition-all duration-150 bg-[#38BDF8]/20 text-[#38BDF8] border border-[#38BDF8]/50 font-bold cursor-pointer shadow-sm';
+				} else {
+					btn.className =
+						'filter-tech-btn px-2 py-0.5 rounded font-mono text-[11px] transition-all duration-150 bg-[#080D18] text-[#8FA6C2] hover:text-[#38BDF8] hover:border-[#38BDF8]/40 border border-[#243752] cursor-pointer';
+				}
+			});
+
+			// Show / Hide Reset Button
+			const hasActiveFilters =
+				selectedCategory !== 'all' || selectedStatus !== 'all' || selectedTechs.size > 0;
+			if (resetBtn) {
+				if (hasActiveFilters) {
+					resetBtn.classList.remove('hidden');
+					resetBtn.classList.add('inline-flex');
+				} else {
+					resetBtn.classList.add('hidden');
+					resetBtn.classList.remove('inline-flex');
+				}
+			}
+
+			// Filter Cards
+			let visibleCount = 0;
+			projectCards.forEach((card) => {
+				const cardCat = card.getAttribute('data-category') || '';
+				const cardStatus = card.getAttribute('data-status') || '';
+				const cardTools = (card.getAttribute('data-tools') || '')
+					.split(',')
+					.map((t) => t.trim().toLowerCase());
+
+				const matchesCat = selectedCategory === 'all' || cardCat === selectedCategory;
+				const matchesStatus = selectedStatus === 'all' || cardStatus === selectedStatus;
+				let matchesTech = true;
+
+				if (selectedTechs.size > 0) {
+					matchesTech = Array.from(selectedTechs).some((t) =>
+						cardTools.includes(t.toLowerCase())
+					);
+				}
+
+				if (matchesCat && matchesStatus && matchesTech) {
+					card.style.display = '';
+					visibleCount++;
+				} else {
+					card.style.display = 'none';
+				}
+			});
+
+			// Update Match Counter
+			if (matchCountEl) {
+				matchCountEl.textContent = `${visibleCount} / ${projectCards.length}`;
+			}
+
+			// Show / Hide Empty State
+			if (emptyState) {
+				if (visibleCount === 0) {
+					emptyState.classList.remove('hidden');
+					emptyState.classList.add('flex');
+				} else {
+					emptyState.classList.add('hidden');
+					emptyState.classList.remove('flex');
+				}
+			}
+
+			updateUrlParams();
+		}
+
+		// Event: Category Click
+		categoryBtns.forEach((btn) => {
+			btn.addEventListener('click', () => {
+				const cat = btn.getAttribute('data-filter-category');
+				if (cat) {
+					selectedCategory = cat;
+					updateUI();
+				}
+			});
+		});
+
+		// Event: Status Click
+		statusBtns.forEach((btn) => {
+			btn.addEventListener('click', () => {
+				const st = btn.getAttribute('data-filter-status');
+				if (st) {
+					selectedStatus = st;
+					updateUI();
+				}
+			});
+		});
+
+		// Event: Tech Click
+		techBtns.forEach((btn) => {
+			btn.addEventListener('click', () => {
+				const tech = btn.getAttribute('data-filter-tech');
+				if (tech) {
+					if (selectedTechs.has(tech)) {
+						selectedTechs.delete(tech);
+					} else {
+						selectedTechs.add(tech);
+					}
+					updateUI();
+				}
+			});
+		});
+
+		// Event: Reset Click
+		if (resetBtn) {
+			resetBtn.addEventListener('click', () => {
+				selectedCategory = 'all';
+				selectedStatus = 'all';
+				selectedTechs.clear();
+				updateUI();
+			});
+		}
+
+		// Empty State Reset Click
+		const emptyResetBtn = document.getElementById('empty-state-reset-btn');
+		if (emptyResetBtn) {
+			emptyResetBtn.addEventListener('click', () => {
+				selectedCategory = 'all';
+				selectedStatus = 'all';
+				selectedTechs.clear();
+				updateUI();
+			});
+		}
+
+		updateUI();
+	}
+
+	setupProjectFiltering();
+	document.addEventListener('astro:page-load', setupProjectFiltering);
+</script>

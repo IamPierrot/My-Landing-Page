@@ -1,0 +1,257 @@
+---
+import {
+	Microscope,
+	ExternalLink,
+	Terminal,
+	Code2,
+	Lightbulb,
+	Filter,
+	RotateCcw,
+} from 'lucide-astro';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import SidebarContainer from '../components/sidebar/SidebarContainer.astro';
+import Sidebar from '../components/sidebar/Sidebar.astro';
+import ProjectFilters from '../components/sidebar/ProjectFilters.astro';
+import MobileSidebar from '../components/sidebar/MobileSidebar.astro';
+import {
+	SITE_TITLE,
+	PROJECTS,
+	PROJECT_CATEGORIES,
+	PROJECT_TOOLS,
+	PROJECT_STATUSES,
+	SOCIAL_LINKS,
+} from '../assets/config';
+
+const categories = PROJECT_CATEGORIES;
+const technologies = PROJECT_TOOLS;
+const statuses = PROJECT_STATUSES;
+const projects = PROJECTS;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Projects // ${SITE_TITLE}`}
+			description="Verified Hack The Box Sherlocks and DFIR forensic research work by Pierrot."
+		/>
+	</head>
+	<body class="bg-[#080D18] text-[#DCE8F5] antialiased">
+		<Header />
+
+		<main class="w-full">
+			<SidebarContainer maxWidth="max-w-6xl" side="left">
+				<!-- Mobile Filter Trigger (< 1024px) -->
+				<MobileSidebar slot="mobileSidebar" title="Filter Projects" type="filters">
+					<ProjectFilters
+						categories={categories}
+						technologies={technologies}
+						statuses={statuses}
+						totalCount={projects.length}
+					/>
+				</MobileSidebar>
+
+				<!-- Desktop Sticky Filter Sidebar (>= 1024px) -->
+				<Sidebar slot="sidebar" ariaLabel="Project filters" position="left">
+					<ProjectFilters
+						categories={categories}
+						technologies={technologies}
+						statuses={statuses}
+						totalCount={projects.length}
+					/>
+				</Sidebar>
+
+				<!-- Main Projects Column -->
+				<div class="flex flex-col gap-6">
+					<!-- Header -->
+					<section data-animate="fade-up" class="pb-6 border-b border-[#243752]">
+						<div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+							<div class="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-[#8FA6C2]">
+								<span class="text-[#38BDF8] font-bold">//</span>
+								<span>Hack The Box &amp; DFIR Research</span>
+							</div>
+
+							<a
+								href={SOCIAL_LINKS.hackthebox.url}
+								target="_blank"
+								rel="noreferrer noopener"
+								class="inline-flex items-center gap-1.5 font-mono text-xs px-2.5 py-1 rounded-md bg-[#101A2B] text-[#38BDF8] border border-[#38BDF8]/35 hover:bg-[#16233B] hover:border-[#38BDF8]/60 transition-colors shadow-sm"
+								title="Visit IamPierrot on HackTheBox"
+							>
+								<Terminal class="w-3.5 h-3.5" />
+								<span>HTB: {SOCIAL_LINKS.hackthebox.handle}</span>
+								<ExternalLink class="w-3 h-3 opacity-60" />
+							</a>
+						</div>
+
+						<h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-[#DCE8F5] mb-3">
+							Forensic Investigations
+						</h1>
+
+						<p class="text-base text-[#8FA6C2] max-w-2xl leading-relaxed">
+							Practical incident response write-ups, memory triage artifacts, and network capture dissections from Hack The Box Sherlocks. All investigations represent self-implemented and verified forensic analysis.
+						</p>
+					</section>
+
+					<!-- Empty State when 0 filters match -->
+					<div
+						id="projects-empty-state"
+						class="hidden flex-col items-center justify-center p-8 sm:p-12 text-center rounded-lg bg-[#101A2B] border border-[#243752] font-mono"
+					>
+						<div class="w-12 h-12 rounded-lg bg-[#16233B] border border-[#243752] flex items-center justify-center text-[#38BDF8] mb-4">
+							<Filter class="w-6 h-6" />
+						</div>
+						<div class="text-xs uppercase tracking-wider text-[#38BDF8] font-bold mb-1">
+							[ NO_MATCHING_PROJECTS ]
+						</div>
+						<p class="text-sm text-[#8FA6C2] max-w-sm mb-4">
+							No projects match the selected category, technology, or status criteria.
+						</p>
+						<button
+							id="empty-state-reset-btn"
+							type="button"
+							class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 hover:bg-[#38BDF8]/25 text-xs font-semibold cursor-pointer transition-colors"
+						>
+							<RotateCcw class="w-3.5 h-3.5" />
+							<span>Reset All Filters</span>
+						</button>
+					</div>
+
+					<!-- Projects Directory -->
+					<section class="flex flex-col gap-6" aria-label="Projects directory">
+						{
+							projects.map((project) => {
+								return (
+									<article
+										class="project-card group bg-[#101A2B] border border-[#243752] rounded-lg p-5 sm:p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#38BDF8]/40 hover:bg-[#16233B] hover:shadow-[0_4px_20px_rgba(56,189,248,0.06)] flex flex-col gap-4"
+										data-category={project.category}
+										data-status={project.status}
+										data-tools={project.tools.join(',')}
+									>
+										<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#243752]/40">
+											<div class="flex items-center flex-wrap gap-2.5">
+												<div class="w-8 h-8 rounded-md bg-[#16233B] border border-[#243752] flex items-center justify-center text-[#38BDF8] group-hover:border-[#38BDF8]/40 transition-colors">
+													<Microscope class="w-4 h-4" />
+												</div>
+												<h2 class="font-mono text-lg font-semibold text-[#DCE8F5]">
+													{project.repoUrl ? (
+														<a
+															href={project.repoUrl}
+															target="_blank"
+															rel="noreferrer noopener"
+															class="inline-flex items-center gap-1.5 hover:text-[#38BDF8] transition-colors"
+														>
+															{project.title}
+															<ExternalLink class="w-3.5 h-3.5 opacity-60" />
+														</a>
+													) : project.demoUrl ? (
+														<a
+															href={project.demoUrl}
+															target="_blank"
+															rel="noreferrer noopener"
+															class="inline-flex items-center gap-1.5 hover:text-[#38BDF8] transition-colors"
+														>
+															{project.title}
+															<ExternalLink class="w-3.5 h-3.5 opacity-60" />
+														</a>
+													) : (
+														project.title
+													)}
+												</h2>
+												<span class="font-mono text-xs px-2.5 py-0.5 rounded bg-[#16233B] text-[#60A5FA] border border-[#243752]">
+													{project.category}
+												</span>
+											</div>
+
+											<span class="font-mono text-xs text-[#8FA6C2] self-start sm:self-auto">
+												{project.status}
+											</span>
+										</div>
+
+										<p class="text-sm sm:text-base text-[#DCE8F5] leading-relaxed">
+											{project.summary}
+										</p>
+
+										<div class="space-y-3 text-xs sm:text-sm text-[#8FA6C2]">
+											<div>
+												<span class="font-mono text-xs uppercase tracking-wider text-[#546C8E] flex items-center gap-1.5 mb-1">
+													<Terminal class="w-3.5 h-3.5 text-[#38BDF8]" />
+													Approach &amp; Implementation:
+												</span>
+												<p class="leading-relaxed pl-5">{project.approach}</p>
+											</div>
+
+											<div>
+												<span class="font-mono text-xs uppercase tracking-wider text-[#546C8E] flex items-center gap-1.5 mb-1">
+													<Code2 class="w-3.5 h-3.5 text-[#38BDF8]" />
+													Personal Contribution:
+												</span>
+												<p class="leading-relaxed pl-5">{project.contribution}</p>
+											</div>
+
+											<div>
+												<span class="font-mono text-xs uppercase tracking-wider text-[#546C8E] flex items-center gap-1.5 mb-1">
+													<Lightbulb class="w-3.5 h-3.5 text-[#38BDF8]" />
+													Key Takeaways:
+												</span>
+												<p class="leading-relaxed pl-5">{project.lessons}</p>
+											</div>
+										</div>
+
+										<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#243752]/40">
+											<div class="flex items-center flex-wrap gap-1.5">
+												{project.tools.map((t) => (
+													<span class="font-mono text-xs px-2.5 py-0.5 rounded bg-[#080D18] text-[#38BDF8] border border-[#38BDF8]/25">
+														{t}
+													</span>
+												))}
+											</div>
+
+											<div class="flex items-center flex-wrap gap-3">
+												{project.htbProfileUrl && (
+													<a
+														href={project.htbProfileUrl}
+														target="_blank"
+														rel="noreferrer noopener"
+														class="inline-flex items-center gap-1.5 font-mono text-xs px-2.5 py-1 rounded bg-[#16233B] text-[#7DD3FC] border border-[#38BDF8]/30 hover:bg-[#38BDF8]/10 hover:border-[#38BDF8]/60 transition-colors"
+													>
+														<Terminal class="w-3.5 h-3.5 text-[#38BDF8]" />
+														<span>HTB Profile</span>
+													</a>
+												)}
+												{project.repoUrl && (
+													<a
+														href={project.repoUrl}
+														target="_blank"
+														rel="noreferrer noopener"
+														class="inline-flex items-center gap-1 font-mono text-xs text-[#38BDF8] hover:text-[#7DD3FC] font-medium"
+													>
+														View Source &rarr;
+													</a>
+												)}
+												{project.demoUrl && (
+													<a
+														href={project.demoUrl}
+														target="_blank"
+														rel="noreferrer noopener"
+														class="inline-flex items-center gap-1 font-mono text-xs text-[#38BDF8] hover:text-[#7DD3FC] font-medium"
+													>
+														View Sherlock &rarr;
+													</a>
+												)}
+											</div>
+										</div>
+									</article>
+								);
+							})
+						}
+					</section>
+				</div>
+			</SidebarContainer>
+		</main>
+
+		<Footer />
+	</body>
+</html>
