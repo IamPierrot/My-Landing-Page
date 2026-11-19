@@ -17,18 +17,15 @@ In post-compromise digital forensics and incident response (DFIR), host-based ar
 
 When responding to advanced intrusions, investigators often encounter hosts where security event logs have been cleared, audit policies tampered with, or memory spaces corrupted before acquisition. In contrast, packet captures recorded at network taps, switch SPAN/mirror ports, or network boundary firewalls preserve the exact sequence of bits transmitted over physical and virtual links.
 
-```text
-[Adversary Host] ---> [Switch / SPAN Tap] ---> [Target Network / Host]
-                              |
-                              v
-                   [Raw Packet Capture]
-               (Immutable Ground-Truth Data)
-                              |
-        +---------------------+---------------------+
-        |                     |                     |
-        v                     v                     v
-   [Wireshark]            [tshark]               [Zeek]
- (Deep Inspection)   (CLI & Automated)    (NSM Structured Logs)
+```mermaid
+flowchart TD
+    Adv["Adversary Host"] -->|Network Traffic| Tap["Switch / SPAN Tap"]
+    Tap -->|Forwarded Traffic| Target["Target Network / Host"]
+    Tap -->|Traffic Mirror| PCAP["Raw Packet Capture<br/>(Immutable Ground-Truth Data)"]
+
+    PCAP --> WS["Wireshark<br/>(Deep Inspection)"]
+    PCAP --> TS["tshark<br/>(CLI & Automated Triage)"]
+    PCAP --> ZK["Zeek<br/>(NSM Structured Logs)"]
 ```
 
 > **INVESTIGATIVE INSIGHT:**
@@ -117,21 +114,26 @@ Every piece of user or adversary data undergoes progressive encapsulation as it 
 
 TCP establishes reliable bidirectional channels through state transitions governed by RFC 9293:
 
-```text
-    Client                                   Server
-      |                                        |
-      | -------- 1. SYN [Seq = X] -----------> |  (SYN_SENT -> LISTEN)
-      |                                        |
-      | <--- 2. SYN-ACK [Seq = Y, Ack = X+1] - |  (SYN_RECEIVED)
-      |                                        |
-      | -------- 3. ACK [Seq = X+1, Ack = Y+1] |  (ESTABLISHED)
-      |                                        |
-      | ================= DATA =============== |
-      |                                        |
-      | -------- 4. FIN-ACK -----------------> |  (FIN_WAIT_1 -> CLOSE_WAIT)
-      | <------- 5. ACK ---------------------- |  (FIN_WAIT_2)
-      | <------- 6. FIN-ACK ------------------ |  (LAST_ACK)
-      | -------- 7. ACK ---------------------> |  (TIME_WAIT -> CLOSED)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Client Host
+    actor Server as Server Host
+
+    Note over Client,Server: Phase 1: TCP Three-Way Handshake
+    Client->>Server: SYN [Seq = X]
+    Server-->>Client: SYN-ACK [Seq = Y, Ack = X+1]
+    Client->>Server: ACK [Seq = X+1, Ack = Y+1]
+
+    Note over Client,Server: Phase 2: Active Data Exchange
+    Client->>Server: PSH-ACK [Payload]
+    Server-->>Client: ACK [Received]
+
+    Note over Client,Server: Phase 3: Orderly Teardown
+    Client->>Server: FIN-ACK [Close Request]
+    Server-->>Client: ACK [Closing]
+    Server-->>Client: FIN-ACK [Server Close]
+    Client->>Server: ACK [Connection Closed]
 ```
 
 The capture excerpt below illustrates a completed TCP 3-way handshake and stream lifecycle:
@@ -169,17 +171,20 @@ Understanding normative versus anomalous TCP flag combinations enables rapid det
 
 DNS operates primarily over **UDP port 53** (with fallback to **TCP port 53** when response payloads exceed 512 bytes). Because external DNS resolution is required for basic network operations, adversaries routinely abuse it for Command and Control (C2) and data exfiltration.
 
-```text
-                      +-----------------------------+
-                      | Attacker Authoritative Name |
-                      |    Server (C2 Listener)     |
-                      +-----------------------------+
-                                     ^
-                                     | Iterative Query Resolution
-                                     v
-[Compromised Host] ---> [Local DNS Resolver] ---> [Root / TLD Servers]
-   (Encodes base64           (Relays
-    chunk in subdomains)      unaware)
+```mermaid
+flowchart LR
+    Host["Compromised Host<br/>(Encodes Base64 data in subdomains)"]
+    Resolver["Local DNS Resolver<br/>(Relays unaware recursive query)"]
+    TLD["Root / TLD Servers"]
+    C2["Attacker Authoritative Name Server<br/>(C2 Listener)"]
+
+    Host -->|"1. Query: dGhpcy1pcy1hbi1leGZpbA==.c2.adversary.net"| Resolver
+    Resolver -->|"2. Iterative query resolution"| TLD
+    TLD -->|"3. Referral to Authoritative NS"| Resolver
+    Resolver -->|"4. Forward query"| C2
+    C2 -->|"5. Exfiltration decoded by C2"| C2
+    C2 -.->|"6. Response with queued command TXT"| Resolver
+    Resolver -.->|"7. DNS Response"| Host
 ```
 
 #### Forensic Anomaly 1: DNS Tunneling
@@ -232,13 +237,18 @@ Content-Length: 1048576
 
 TLS (TCP port 443) encrypts application payloads, preventing direct deep packet inspection. Analysts must extract structural metadata during the **plaintext TLS Handshake**:
 
-```text
-Client                                                   Server
-  |                                                         |
-  | ----- Client Hello [SNI: attacker-c2.com, JA3] -------> |
-  | <---- Server Hello [Cipher Selected, Certificate] ------|
-  | <---- Server Key Exchange / Certificate Verify ---------|
-  | ----- [Finished: Encrypted Session Established] ------> |
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Client Host
+    actor Server as Server / C2 Listener
+
+    Client->>Server: Client Hello [SNI: attacker-c2.com, JA3]
+    Server-->>Client: Server Hello [Cipher Selected]
+    Server-->>Client: Certificate [Public Key]
+    Server-->>Client: Key Exchange & Verify
+    Client->>Server: Finished [Session Encrypted]
+    Note over Client,Server: Subsequent traffic is encrypted
 ```
 
 #### Metadata Extraction Vectors:
@@ -258,15 +268,23 @@ Client                                                   Server
 
 SMB (TCP port 445) is the primary protocol for Windows file sharing, remote management, and Inter-Process Communication (IPC). It is the primary transport for internal lateral movement.
 
-```text
-[Compromised Host]                                  [Domain Controller]
-       |                                                    |
-       | ----- Session Setup Request [NTLMSSP Auth] ------> |
-       | <---- Session Setup Response [0xc000006d FAILURE]  |  (Failed Login)
-       |                                                    |
-       | ----- Tree Connect Request [\\DC01\ADMIN$] ------> |  (Admin Share)
-       | ----- Create Request [Named Pipe: \svcctl] ------> |  (Service Control)
-       | ----- Write Request [Launch Malicious Service] --> |  (PsExec Execution)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Host as Compromised Host
+    actor DC as Domain Controller
+
+    Note over Host,DC: Anomaly 1: Password Spraying Attempt
+    Host->>DC: Session Setup [NTLMSSP Auth]
+    DC-->>Host: Response [0xc000006d: Logon Failure]
+
+    Note over Host,DC: Anomaly 2: Lateral Movement via PsExec Named Pipe
+    Host->>DC: Tree Connect [\\DC01\ADMIN$]
+    DC-->>Host: Tree Connect [Success]
+    Host->>DC: Create Request [Pipe: \pipe\svcctl]
+    DC-->>Host: Create Response [Handle Opened]
+    Host->>DC: Write Request [Start Service]
+    DC-->>Host: Write Response [Service Executed]
 ```
 
 #### Critical Forensic Signatures in SMB:
@@ -286,19 +304,19 @@ SMB (TCP port 445) is the primary protocol for Windows file sharing, remote mana
 
 While Wireshark provides rich visual inspection, `tshark` is the superior engine for rapid triage, automated pipelines, and headless extraction over multi-gigabyte captures.
 
-```text
-                                [large_capture.pcap]
-                                         |
-                                         v
-                         tshark -r capture.pcap -Y "..."
-                                         |
-                       +-----------------+-----------------+
-                       |                                   |
-                       v                                   v
-             [Field Extraction (-T)]               [Object Carving]
-                       |                                   |
-                       v                                   v
-          cut | sort | uniq -c | sort -nr             [Extracted Files]
+```mermaid
+flowchart TD
+    PCAP["Capture Source<br/>(large_capture.pcap)"]
+    Filter["tshark Engine<br/>tshark -r capture.pcap -Y '...'"]
+
+    PCAP --> Filter
+    Filter --> Extract["Field Extraction (-T fields)<br/>Extract IP, DNS, TLS SNI, HTTP URI"]
+    Filter --> Carve["Object Carving (--export-objects)<br/>Extract files from HTTP / SMB streams"]
+
+    Extract --> Pipe["CLI Pipeline Aggregation<br/>cut | sort | uniq -c | sort -nr"]
+    Carve --> Artifacts["Forensic Artifacts<br/>(Carved Binaries & Scripts)"]
+
+    Pipe --> Report["Threat Intelligence<br/>(Ranked IoCs & Top Talkers)"]
 ```
 
 ### Essential `tshark` Command Flags
@@ -356,13 +374,21 @@ tshark -r bkisc.pcap --export-objects "http,./extracted_objects"
 
 **Threat Mechanism**: Instead of trying many passwords against a single account (triggering lockout policies), the adversary tries a single common password across hundreds of user accounts.
 
-```text
-[Attacker Host] 
-   |
-   +-- (User1, Winter2026!) --> [Port 88 / 445] -> KRB5KDC_ERR_PREAUTH_FAILED (0x18)
-   +-- (User2, Winter2026!) --> [Port 88 / 445] -> KRB5KDC_ERR_PREAUTH_FAILED (0x18)
-   +-- (User3, Winter2026!) --> [Port 88 / 445] -> KRB5KDC_ERR_PREAUTH_FAILED (0x18)
-   +-- (UserN, Winter2026!) --> [Port 88 / 445] -> SUCCESS (Valid Credential Found)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Attacker as Attacker
+    actor Auth as Auth Server (Kerberos / SMB)
+
+    Attacker->>Auth: Probe 1 [User1, Pass: Winter2026!]
+    Auth-->>Attacker: Auth Failed (0x18 / 0xc000006d)
+    Attacker->>Auth: Probe 2 [User2, Pass: Winter2026!]
+    Auth-->>Attacker: Auth Failed (0x18 / 0xc000006d)
+    Attacker->>Auth: Probe 3 [User3, Pass: Winter2026!]
+    Auth-->>Attacker: Auth Failed (0x18 / 0xc000006d)
+    Attacker->>Auth: Probe N [UserN, Pass: Winter2026!]
+    Auth-->>Attacker: Auth Success [Valid Ticket]
+    Note over Attacker,Auth: 1 pass vs N accounts (no lockout)
 ```
 
 #### Forensic Signatures:

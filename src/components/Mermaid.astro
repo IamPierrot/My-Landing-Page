@@ -1,0 +1,14 @@
+---
+interface Props {
+	code: string;
+	title?: string;
+	caption?: string;
+}
+
+const { code, title, caption } = Astro.props;
+---
+
+<figure class="mermaid-diagram-component my-6 not-prose">
+	<pre class="mermaid" data-language="mermaid" data-title={title}><code>{code}</code></pre>
+	{caption && <figcaption class="mermaid-diagram-caption">{caption}</figcaption>}
+</figure>

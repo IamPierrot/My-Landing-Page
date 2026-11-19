@@ -258,11 +258,16 @@ const {
 
 		<!-- Client-Side Readability & Ergonomics Enhancements -->
 		<script>
-			function initArticleEnhancements() {
+			import { initMermaidDiagrams } from '../scripts/mermaid';
+
+			async function initArticleEnhancements() {
 				const prose = document.getElementById('article-prose');
 				if (!prose) return;
 
-				// 1. Wrap raw tables in responsive .table-wrapper
+				// 1. Initialize interactive Mermaid diagrams (Section 1 & 4 of TASKS_2)
+				await initMermaidDiagrams();
+
+				// 2. Wrap raw tables in responsive .table-wrapper
 				const tables = prose.querySelectorAll('table');
 				tables.forEach((table) => {
 					if (table.parentElement && !table.parentElement.classList.contains('table-wrapper')) {
@@ -273,15 +278,19 @@ const {
 					}
 				});
 
-				// 2. Enhance code blocks with terminal header & copy-to-clipboard action
+				// 3. Enhance code blocks with terminal header & copy-to-clipboard action
 				const codeBlocks = prose.querySelectorAll<HTMLPreElement>('pre');
 				codeBlocks.forEach((pre) => {
 					if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrapper')) {
 						return;
 					}
 
-					// Detect language
+					// Skip mermaid blocks (handled exclusively by Mermaid renderer)
 					let lang = pre.getAttribute('data-language') || '';
+					if (lang === 'mermaid' || pre.classList.contains('mermaid') || pre.hasAttribute('data-mermaid-processed')) {
+						return;
+					}
+
 					if (!lang || lang === 'plaintext') {
 						const codeEl = pre.querySelector('code');
 						const classList = codeEl ? Array.from(codeEl.classList) : [];
@@ -291,6 +300,10 @@ const {
 						} else {
 							lang = 'terminal';
 						}
+					}
+
+					if (lang === 'mermaid') {
+						return;
 					}
 
 					// Create wrapper

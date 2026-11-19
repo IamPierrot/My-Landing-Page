@@ -469,6 +469,194 @@ pre.astro-code {
   letter-spacing: 0.02em;
 }
 
+/* ==========================================================================
+   Mermaid Diagram Container & SVG Styling
+   ========================================================================== */
+.mermaid-diagram-container {
+  margin: 2.25rem 0 !important;
+  border: 1px solid #243752 !important;
+  border-radius: 8px !important;
+  background-color: #0A111E !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.45) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.mermaid-diagram-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem;
+  background-color: #101A2B;
+  border-bottom: 1px solid #243752;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #DCE8F5;
+  user-select: none;
+}
+
+.mermaid-diagram-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #DCE8F5;
+}
+
+.mermaid-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #38BDF8;
+  display: inline-block;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+}
+
+.mermaid-status-error {
+  background-color: #F43F5E !important;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.6) !important;
+}
+
+.mermaid-diagram-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mermaid-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background-color: #080D18;
+  border: 1px solid #243752;
+  color: #8FA6C2;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.mermaid-btn:hover {
+  color: #38BDF8;
+  border-color: rgba(56, 189, 248, 0.4);
+  background-color: #16233B;
+}
+
+.mermaid-btn-active {
+  background-color: rgba(56, 189, 248, 0.15) !important;
+  color: #38BDF8 !important;
+  border-color: #38BDF8 !important;
+}
+
+.mermaid-btn-icon {
+  padding: 0.25rem 0.4rem;
+}
+
+.mermaid-zoom-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: #546C8E;
+  min-width: 32px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  padding: 0 0.15rem;
+}
+
+.mermaid-zoom-label:hover {
+  color: #38BDF8;
+}
+
+.mermaid-diagram-body {
+  position: relative;
+  background-color: #080D18;
+  min-height: 120px;
+  overflow: hidden;
+}
+
+.mermaid-svg-wrapper {
+  padding: 1.75rem 1.25rem;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #080D18;
+}
+
+.mermaid-svg-wrapper svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.mermaid-source-wrapper {
+  padding: 1rem 1.25rem;
+  background-color: #0A111E;
+}
+
+.mermaid-source-pre {
+  margin: 0 !important;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.8rem !important;
+  color: #8FA6C2 !important;
+  line-height: 1.5 !important;
+  white-space: pre-wrap !important;
+}
+
+.mermaid-diagram-caption {
+  padding: 0.6rem 1rem;
+  background-color: #0A111E;
+  border-top: 1px solid #243752;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: #8FA6C2;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.mermaid-error-notice {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.mermaid-error-msg {
+  color: #F43F5E;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.mermaid-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background-color: #080D18;
+  border: 1px solid #243752;
+  color: #8FA6C2;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mermaid-modal-btn:hover {
+  color: #38BDF8;
+  border-color: rgba(56, 189, 248, 0.4);
+  background-color: #16233B;
+}
+
 /* Preloader Instant Session Suppression */
 html.preloader-skipped #site-preloader {
   display: none !important;
