@@ -421,6 +421,11 @@ pre.astro-code {
   vertical-align: top;
 }
 
+.prose td code {
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
 .prose tr:last-child td {
   border-bottom: none;
 }
