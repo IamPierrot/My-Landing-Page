@@ -1,44 +1,49 @@
-import { animate, stagger } from 'motion';
-
 /**
- * Compulsory Website Startup Boot Sequence
- * Runs the terminal boot preloader animation sequentially,
- * and resolves when the exit transition is complete.
+ * Terminal Preload Animation Sequence
+ * Runs once per session on the first visit.
+ * Implemented with pure Web Animations API (zero external dependencies).
  */
-export function runPreloader(preloaderEl: HTMLElement, onExit?: () => void): Promise<void> {
+
+export function runPreloader(preloaderEl: HTMLElement): Promise<void> {
 	return new Promise((resolve) => {
-		// Session check: if already seen in this session, skip immediately
+		// 1. Session check: skip immediately if already seen in this session
 		try {
 			if (sessionStorage.getItem('pierrot_preloader_seen') === 'true') {
-				if (onExit) {
-					try {
-						onExit();
-					} catch (e) {}
-				}
 				preloaderEl.remove();
 				resolve();
 				return;
 			}
-		} catch (e) {}
+		} catch (e) {
+			// Ignore sessionStorage errors (e.g. private mode restrictions)
+		}
 
-		// Accessibility: Check prefers-reduced-motion
+		// 2. Accessibility: Skip immediately if prefers-reduced-motion is active
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 			try {
 				sessionStorage.setItem('pierrot_preloader_seen', 'true');
 			} catch (e) {}
-			if (onExit) {
-				try {
-					onExit();
-				} catch (e) {}
-			}
+			document.documentElement.classList.add('preloader-skipped');
 			preloaderEl.remove();
 			resolve();
 			return;
 		}
 
-		// Prevent background scrolling during startup boot sequence
-		const originalOverflow = document.body.style.overflow;
-		document.body.style.overflow = 'hidden';
+		// 3. Fallback if Web Animations API is not supported
+		if (typeof preloaderEl.animate !== 'function') {
+			try {
+				sessionStorage.setItem('pierrot_preloader_seen', 'true');
+			} catch (e) {}
+			document.documentElement.classList.add('preloader-skipped');
+			preloaderEl.remove();
+			resolve();
+			return;
+		}
+
+		// Lock body scroll during preloader
+		const originalOverflow = document.body ? document.body.style.overflow : '';
+		if (document.body) {
+			document.body.style.overflow = 'hidden';
+		}
 
 		const promptEl = preloaderEl.querySelector('.boot-prompt') as HTMLElement | null;
 		const logLines = preloaderEl.querySelectorAll('.boot-line');
@@ -50,70 +55,68 @@ export function runPreloader(preloaderEl: HTMLElement, onExit?: () => void): Pro
 		let isCompleted = false;
 
 		const cleanupAndResolve = () => {
-			document.body.style.overflow = originalOverflow;
+			if (document.body) {
+				document.body.style.overflow = originalOverflow;
+			}
 			preloaderEl.remove();
 			resolve();
 		};
 
-		async function finishPreloader() {
+		async function finishPreloader(fast = false) {
 			if (isCompleted) return;
 			isCompleted = true;
 
+			preloaderEl.removeEventListener('click', handleSkip);
+			window.removeEventListener('keydown', handleKeydown);
+
+			// Disable pointer events immediately so interactions pass through to page below
+			preloaderEl.style.pointerEvents = 'none';
+
+			// Smooth floating up exit animation (curtain lift, zero flash)
+			const duration = fast ? 320 : 520;
+			try {
+				const exitAnimations: Animation[] = [];
+
+				// Float the entire preloader screen smoothly off the top of the viewport
+				const preloaderAnim = preloaderEl.animate(
+					[
+						{ transform: 'translateY(0%)' },
+						{ transform: 'translateY(-100%)' },
+					],
+					{
+						duration,
+						easing: 'cubic-bezier(0.76, 0, 0.24, 1)',
+						fill: 'forwards',
+					}
+				);
+				exitAnimations.push(preloaderAnim);
+
+				// Terminal card also lifts up with a subtle parallax drift
+				if (cardEl) {
+					const cardAnim = cardEl.animate(
+						[
+							{ transform: 'translateY(0) scale(1)' },
+							{ transform: 'translateY(-35px) scale(0.98)' },
+						],
+						{
+							duration: Math.round(duration * 0.9),
+							easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+							fill: 'forwards',
+						}
+					);
+					exitAnimations.push(cardAnim);
+				}
+
+				await Promise.all(exitAnimations.map((anim) => anim.finished));
+			} catch (err) {
+				// Continue to cleanup if animation fails
+			}
+
+			// ONLY AFTER floating exit completes, persist session state and suppress
 			try {
 				sessionStorage.setItem('pierrot_preloader_seen', 'true');
 			} catch (e) {}
 			document.documentElement.classList.add('preloader-skipped');
-
-			// Trigger exit hand-off immediately so page entrance animates in parallel with exit dissolve
-			if (onExit) {
-				try {
-					onExit();
-				} catch (e) {}
-			}
-
-			// Remove skip listeners
-			preloaderEl.removeEventListener('click', handleSkip);
-			window.removeEventListener('keydown', handleKeydown);
-
-			// Disable pointer events immediately so interactions pass through
-			preloaderEl.style.pointerEvents = 'none';
-
-			// Floating exit animation (terminal card floats upward + dissolves)
-			try {
-				const exitPromises: Promise<void>[] = [];
-
-				if (cardEl) {
-					const cardAnim = animate(
-						cardEl,
-						{
-							y: [0, -35],
-							opacity: [1, 0],
-							scale: [1, 0.98],
-						},
-						{
-							duration: 0.35,
-							ease: [0.16, 1, 0.3, 1],
-						}
-					);
-					exitPromises.push(cardAnim.then(() => {}));
-				}
-
-				const bgAnim = animate(
-					preloaderEl,
-					{
-						opacity: [1, 0],
-					},
-					{
-						duration: 0.35,
-						ease: [0.16, 1, 0.3, 1],
-					}
-				);
-				exitPromises.push(bgAnim.then(() => {}));
-
-				await Promise.all(exitPromises);
-			} catch (err) {
-				// Continue cleanup if error occurs
-			}
 
 			cleanupAndResolve();
 		}
@@ -121,7 +124,7 @@ export function runPreloader(preloaderEl: HTMLElement, onExit?: () => void): Pro
 		// Quick skip handlers
 		const handleSkip = () => {
 			clearTimeout(safetyTimeout);
-			finishPreloader();
+			finishPreloader(true);
 		};
 
 		const handleKeydown = (e: KeyboardEvent) => {
@@ -133,13 +136,13 @@ export function runPreloader(preloaderEl: HTMLElement, onExit?: () => void): Pro
 		preloaderEl.addEventListener('click', handleSkip, { once: true });
 		window.addEventListener('keydown', handleKeydown, { once: true });
 
-		// Fallback safety timer (2.2s maximum)
+		// Maximum safety timer (2.2s)
 		const safetyTimeout = setTimeout(finishPreloader, 2200);
 
-		// Coordinated boot sequence
+		// Execute boot sequence
 		(async () => {
 			try {
-				// Initial states
+				// Set initial styles
 				if (cardEl) {
 					cardEl.style.opacity = '0';
 					cardEl.style.transform = 'translateY(12px) scale(0.98)';
@@ -153,63 +156,97 @@ export function runPreloader(preloaderEl: HTMLElement, onExit?: () => void): Pro
 				if (progressBar) progressBar.style.width = '0%';
 				if (readyLine) readyLine.style.opacity = '0';
 
-				// Phase 1: Card entrance (0.25s)
+				// Phase 1: Card entrance (0.2s)
 				if (cardEl) {
-					await animate(
-						cardEl,
-						{ opacity: [0, 1], y: [12, 0], scale: [0.98, 1] },
-						{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }
+					const cardIn = cardEl.animate(
+						[
+							{ opacity: '0', transform: 'translateY(12px) scale(0.98)' },
+							{ opacity: '1', transform: 'translateY(0) scale(1)' },
+						],
+						{
+							duration: 200,
+							easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+							fill: 'forwards',
+						}
 					);
+					await cardIn.finished;
 				}
 				if (isCompleted) return;
 
 				// Phase 2: Command prompt reveal (0.15s)
 				if (promptEl) {
-					await animate(promptEl, { opacity: [0, 1] }, { duration: 0.15 });
+					const promptIn = promptEl.animate(
+						[{ opacity: '0' }, { opacity: '1' }],
+						{ duration: 150, fill: 'forwards' }
+					);
+					await promptIn.finished;
 				}
 				if (isCompleted) return;
 
-				// Phase 3: Staggered log lines & progress bar fill (0.45s)
-				const lineAnim = animate(
-					logLines,
-					{ opacity: [0, 1], x: [-6, 0] },
-					{ delay: stagger(0.06), duration: 0.18, ease: [0.25, 1, 0.5, 1] }
-				);
+				// Phase 3: Staggered log lines & progress bar fill (0.42s)
+				const linePromises: Promise<Animation>[] = [];
+				logLines.forEach((line, index) => {
+					const el = line as HTMLElement;
+					const anim = el.animate(
+						[
+							{ opacity: '0', transform: 'translateX(-6px)' },
+							{ opacity: '1', transform: 'translateX(0)' },
+						],
+						{
+							delay: index * 55,
+							duration: 160,
+							easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+							fill: 'forwards',
+						}
+					);
+					linePromises.push(anim.finished);
+				});
 
 				if (progressBar) {
-					animate(
-						progressBar,
-						{ width: ['0%', '100%'] },
-						{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }
+					progressBar.animate(
+						[{ width: '0%' }, { width: '100%' }],
+						{
+							duration: 420,
+							easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+							fill: 'forwards',
+						}
 					);
 				}
 
-				// Smooth numeric progress counter update
+				// Numeric counter update
 				if (progressText) {
 					const startTime = performance.now();
-					const totalDuration = 450;
-					const updateProgress = (currentTime: number) => {
+					const totalDuration = 420;
+					const updateCounter = (currentTime: number) => {
 						if (isCompleted) return;
 						const elapsed = currentTime - startTime;
 						const percent = Math.min(100, Math.round((elapsed / totalDuration) * 100));
 						progressText.textContent = `${percent}%`;
 						if (percent < 100) {
-							requestAnimationFrame(updateProgress);
+							requestAnimationFrame(updateCounter);
 						}
 					};
-					requestAnimationFrame(updateProgress);
+					requestAnimationFrame(updateCounter);
 				}
 
-				await lineAnim;
+				await Promise.all(linePromises);
 				if (isCompleted) return;
 
 				// Phase 4: System Ready announcement (0.15s)
 				if (readyLine) {
-					await animate(readyLine, { opacity: [0, 1] }, { duration: 0.15, ease: [0.25, 1, 0.5, 1] });
+					const readyIn = readyLine.animate(
+						[{ opacity: '0' }, { opacity: '1' }],
+						{
+							duration: 150,
+							easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+							fill: 'forwards',
+						}
+					);
+					await readyIn.finished;
 				}
 				if (isCompleted) return;
 
-				// Phase 5: Brief hold before exit transition (0.18s)
+				// Phase 5: Brief hold before clean exit (180ms)
 				await new Promise((r) => setTimeout(r, 180));
 				if (isCompleted) return;
 
@@ -221,11 +258,4 @@ export function runPreloader(preloaderEl: HTMLElement, onExit?: () => void): Pro
 			}
 		})();
 	});
-}
-
-/**
- * Backward compatibility alias
- */
-export function initPreloader(preloaderEl: HTMLElement): void {
-	runPreloader(preloaderEl);
 }

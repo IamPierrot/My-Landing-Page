@@ -66,7 +66,9 @@ const {
 				}
 
 				<!-- Main Article Content -->
-				<article class="w-full max-w-3xl">
+				<article class="w-full max-w-3xl relative">
+					<div id="top-sentinel" class="absolute top-0 left-0 w-1 h-[450px] pointer-events-none opacity-0" aria-hidden="true"></div>
+
 					<!-- Top Action & Breadcrumb Navigation -->
 					<nav class="flex items-center justify-between gap-4 mb-8 pt-2" aria-label="Breadcrumb">
 						<a
@@ -90,7 +92,7 @@ const {
 					</nav>
 
 					<!-- Article Header -->
-					<header data-animate="fade-up" class="pb-8 border-b border-[#243752] mb-10">
+					<header class="pb-8 border-b border-[#243752] mb-10">
 						<!-- Metadata Chips -->
 						<div class="flex items-center flex-wrap gap-2.5 text-xs font-mono text-[#8FA6C2] mb-4">
 							<span class="px-2.5 py-0.5 rounded-full bg-[#38BDF8]/10 text-[#38BDF8] border border-[#38BDF8]/30 font-semibold tracking-wide uppercase text-[11px]">
@@ -362,20 +364,25 @@ const {
 					});
 				});
 
-				// 4. Floating Back to Top Button
+				// 4. Floating Back to Top Button (IntersectionObserver sentinel - zero scroll event listener overhead)
 				const backToTopBtn = document.getElementById('floating-back-to-top');
-				if (backToTopBtn) {
-					const toggleVisibility = () => {
-						if (window.scrollY > 400) {
-							backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
-							backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
-						} else {
-							backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
-							backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
-						}
-					};
+				const sentinel = document.getElementById('top-sentinel');
+				if (backToTopBtn && sentinel) {
+					const observer = new IntersectionObserver(
+						(entries) => {
+							const isAtTop = entries[0].isIntersecting;
+							if (isAtTop) {
+								backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+								backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
+							} else {
+								backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+								backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
+							}
+						},
+						{ threshold: 0 }
+					);
+					observer.observe(sentinel);
 
-					window.addEventListener('scroll', toggleVisibility, { passive: true });
 					backToTopBtn.addEventListener('click', () => {
 						window.scrollTo({ top: 0, behavior: 'smooth' });
 					});

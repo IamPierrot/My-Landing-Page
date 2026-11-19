@@ -3,7 +3,7 @@
 
 <div
 	id="site-preloader"
-	class="fixed inset-0 z-[9999] bg-[#080D18] flex flex-col items-center justify-center p-4 sm:p-6 select-none overflow-hidden"
+	class="fixed inset-0 z-[9999] bg-[#080D18] border-b border-[#243752]/70 shadow-[0_25px_60px_rgba(0,0,0,0.95)] will-change-transform flex flex-col items-center justify-center p-4 sm:p-6 select-none overflow-hidden"
 	aria-live="polite"
 	aria-label="System Initializing"
 >
@@ -96,3 +96,12 @@
 		</div>
 	</div>
 </div>
+
+<script>
+	import { runPreloader } from './preloader';
+
+	const el = document.getElementById('site-preloader');
+	if (el) {
+		runPreloader(el);
+	}
+</script>

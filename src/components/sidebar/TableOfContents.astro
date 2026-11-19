@@ -193,47 +193,55 @@ const processedHeadings = (headings || [])
 			}
 		}
 
-		// 3. Scroll spy using real-time viewport bounding rect
-		let isTicking = false;
-		function onScrollSpy() {
-			if (isTicking) return;
-			isTicking = true;
+		// 3. High-performance scroll spy using IntersectionObserver (Zero scroll-listener overhead)
+		const observerOptions: IntersectionObserverInit = {
+			rootMargin: '-85px 0px -65% 0px',
+			threshold: 0,
+		};
 
-			requestAnimationFrame(() => {
-				isTicking = false;
+		const visibleHeadings = new Map<string, number>();
 
-				// Bottom of page: activate last item
-				const atBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 60);
-				if (atBottom && headingElements.length > 0) {
-					const lastId = headingElements[headingElements.length - 1].id;
-					if (lastId !== activeId) {
-						setActiveLink(lastId);
-					}
-					return;
-				}
-
-				// Find current heading passing above threshold (120px)
-				const threshold = 120;
-				let currentId = headingElements[0]?.id;
-
-				for (let i = 0; i < headingElements.length; i++) {
-					const el = headingElements[i];
-					const rect = el.getBoundingClientRect();
-					if (rect.top <= threshold) {
-						currentId = el.id;
-					} else {
-						break;
-					}
-				}
-
-				if (currentId && currentId !== activeId) {
-					setActiveLink(currentId);
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach((entry) => {
+				const id = entry.target.id;
+				if (entry.isIntersecting) {
+					visibleHeadings.set(id, entry.boundingClientRect.top);
+				} else {
+					visibleHeadings.delete(id);
 				}
 			});
+
+			// If any headings are currently in the active reading zone, pick the topmost one
+			if (visibleHeadings.size > 0) {
+				let topId = '';
+				let topPos = Infinity;
+				visibleHeadings.forEach((pos, id) => {
+					if (pos < topPos) {
+						topPos = pos;
+						topId = id;
+					}
+				});
+				if (topId && topId !== activeId) {
+					setActiveLink(topId);
+				}
+			}
+		}, observerOptions);
+
+		headingElements.forEach((el) => observer.observe(el));
+
+		// Bottom of page detection (activate final section when article footer is in view)
+		const articleFooter = document.querySelector('article footer');
+		if (articleFooter) {
+			const footerObserver = new IntersectionObserver((entries) => {
+				if (entries[0].isIntersecting && headingElements.length > 0) {
+					setActiveLink(headingElements[headingElements.length - 1].id);
+				}
+			}, { rootMargin: '0px 0px -10% 0px' });
+			footerObserver.observe(articleFooter);
 		}
 
-		window.addEventListener('scroll', onScrollSpy, { passive: true });
-		onScrollSpy();
+		// Initial active link activation
+		setActiveLink(headingIds[0]);
 	}
 
 	setupTOCSpy();

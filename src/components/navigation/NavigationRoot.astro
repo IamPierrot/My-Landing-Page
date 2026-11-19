@@ -3,14 +3,10 @@ import FloatingDock from './FloatingDock.astro';
 import SOCNavigation from './SOCNavigation.astro';
 import MobileNavigation from './MobileNavigation.astro';
 import Preloader from '../preloader/Preloader.astro';
-import DomAnimations from '../DomAnimations.astro';
 ---
 
-<!-- System Boot Preloader (First session entry) -->
+<!-- Compulsory Initial Visit Preloader -->
 <Preloader />
-
-<!-- Motion DOM Animations & Lifecycle Coordinator -->
-<DomAnimations />
 
 <!-- Desktop: SOC Status Navigation -->
 <SOCNavigation />

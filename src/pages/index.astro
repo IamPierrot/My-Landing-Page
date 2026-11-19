@@ -62,7 +62,6 @@ const icons = {
 					<div class="flex-1">
 						<!-- Terminal Status Badge -->
 						<div
-							data-hero-eyebrow
 							class="inline-flex items-center flex-wrap gap-2 bg-[#101A2B] border border-[#243752] px-3 py-1.5 rounded-md font-mono text-xs sm:text-sm text-[#8FA6C2] mb-4 shadow-sm"
 						>
 							<span class="text-[#38BDF8] font-bold">$</span>
@@ -80,14 +79,13 @@ const icons = {
 						</div>
 
 						<h1
-							data-hero-title
 							id="hero-title"
 							class="text-3xl sm:text-5xl font-bold tracking-tight text-[#DCE8F5] mb-4"
 						>
 							Hi, I'm <span class="text-[#38BDF8] drop-shadow-[0_0_12px_rgba(56,189,248,0.3)]">Pierrot</span>.
 						</h1>
 
-						<div data-hero-bio>
+						<div>
 							<p class="text-base sm:text-lg text-[#8FA6C2] leading-relaxed max-w-2xl mb-5">
 								Computer Science student interested in <strong class="text-[#DCE8F5] font-semibold"
 									>Blue Team</strong
@@ -124,12 +122,10 @@ const icons = {
 						</div>
 
 						<!-- Hero Action Buttons -->
-						<div data-hero-actions class="flex items-center flex-wrap gap-3">
+						<div class="flex items-center flex-wrap gap-3">
 							<a
 								href="/blog"
-								data-motion-hover
-								data-motion-tap
-								class="inline-flex items-center justify-center gap-2 bg-[#38BDF8] text-[#080D18] hover:bg-[#7DD3FC] font-mono text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-md transition-all duration-150 hover:shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:-translate-y-0.5"
+								class="inline-flex items-center justify-center gap-2 bg-[#38BDF8] text-[#080D18] hover:bg-[#7DD3FC] font-mono text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-md transition-all duration-150 hover:shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:-translate-y-0.5 active:translate-y-0"
 							>
 								<BookOpen class="w-4 h-4" />
 								Read Technical Notes
@@ -137,9 +133,7 @@ const icons = {
 
 							<a
 								href="/projects"
-								data-motion-hover
-								data-motion-tap
-								class="inline-flex items-center justify-center gap-2 bg-[#101A2B] text-[#DCE8F5] border border-[#243752] hover:bg-[#16233B] hover:border-[#38BDF8]/40 hover:text-[#38BDF8] font-mono text-xs sm:text-sm font-medium px-4 py-2.5 rounded-md transition-all duration-150 hover:-translate-y-0.5"
+								class="inline-flex items-center justify-center gap-2 bg-[#101A2B] text-[#DCE8F5] border border-[#243752] hover:bg-[#16233B] hover:border-[#38BDF8]/40 hover:text-[#38BDF8] font-mono text-xs sm:text-sm font-medium px-4 py-2.5 rounded-md transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0"
 							>
 								<FolderGit2 class="w-4 h-4" />
 								View Projects
@@ -155,7 +149,7 @@ const icons = {
 					</div>
 
 					<!-- Hero Avatar with Cyber Frame -->
-					<div data-hero-avatar class="shrink-0 self-center md:self-auto relative group">
+					<div class="shrink-0 self-center md:self-auto relative group">
 						<!-- Glow background aura -->
 						<div
 							class="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#38BDF8]/30 via-[#60A5FA]/20 to-[#38BDF8]/30 blur-md opacity-70 group-hover:opacity-100 transition duration-300"
@@ -193,7 +187,7 @@ const icons = {
 
 			<!-- Technical Focus Areas -->
 			<section class="mb-12" aria-labelledby="focus-heading">
-				<div data-reveal class="flex items-center justify-between pb-3 border-b border-[#243752] mb-5">
+				<div class="flex items-center justify-between pb-3 border-b border-[#243752] mb-5">
 					<h2
 						id="focus-heading"
 						class="font-mono text-base font-semibold text-[#DCE8F5] flex items-center gap-2"
@@ -203,7 +197,7 @@ const icons = {
 					<span class="font-mono text-xs text-[#546C8E] uppercase tracking-wider">Capabilities</span>
 				</div>
 
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4" data-animate="stagger">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					{
 						focusAreas.map((area) => {
 							const IconComponent = icons[area.iconName];
@@ -238,7 +232,7 @@ const icons = {
 
 			<!-- Featured Projects -->
 			<section class="mb-12" aria-labelledby="projects-heading">
-				<div data-reveal class="flex items-center justify-between pb-3 border-b border-[#243752] mb-5">
+				<div class="flex items-center justify-between pb-3 border-b border-[#243752] mb-5">
 					<h2
 						id="projects-heading"
 						class="font-mono text-base font-semibold text-[#DCE8F5] flex items-center gap-2"
@@ -253,7 +247,7 @@ const icons = {
 					</a>
 				</div>
 
-				<div class="flex flex-col gap-4" data-animate="stagger">
+				<div class="flex flex-col gap-4">
 					{
 						projects.map((proj) => {
 							const ProjIcon = Microscope;
@@ -316,7 +310,7 @@ const icons = {
 
 			<!-- Recent Research & Write-ups -->
 			<section class="mb-12" aria-labelledby="blog-heading">
-				<div data-reveal class="flex items-center justify-between pb-3 border-b border-[#243752] mb-5">
+				<div class="flex items-center justify-between pb-3 border-b border-[#243752] mb-5">
 					<h2
 						id="blog-heading"
 						class="font-mono text-base font-semibold text-[#DCE8F5] flex items-center gap-2"
@@ -331,7 +325,7 @@ const icons = {
 					</a>
 				</div>
 
-				<div class="flex flex-col gap-4" data-animate="stagger">
+				<div class="flex flex-col gap-4">
 					{
 						posts.map((post) => (
 							<article class="group bg-[#101A2B] border border-[#243752] rounded-lg p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#38BDF8]/40 hover:bg-[#16233B] hover:shadow-[0_4px_20px_rgba(56,189,248,0.06)] flex flex-col gap-3">
@@ -383,7 +377,6 @@ const icons = {
 			<!-- Lab Affiliation Card (Featuring BKISC Avatar) -->
 			<section aria-labelledby="affil-heading">
 				<div
-					data-reveal
 					class="bg-gradient-to-r from-[#101A2B] via-[#101A2B] to-[#16233B] border border-[#243752] hover:border-[#38BDF8]/40 rounded-lg p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-sm transition-all duration-200 hover:shadow-[0_4px_24px_rgba(56,189,248,0.08)]"
 				>
 					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 max-w-xl">

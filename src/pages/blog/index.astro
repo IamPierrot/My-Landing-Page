@@ -31,7 +31,7 @@ const allCategories = Array.from(new Set(posts.map((p) => p.data.category)));
 		<Header />
 		<main class="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
 			<!-- Page Header -->
-			<section data-animate="fade-up" class="pb-8 border-b border-[#243752] mb-8">
+			<section class="pb-8 border-b border-[#243752] mb-8">
 				<div class="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-[#8FA6C2] mb-3">
 					<span class="text-[#38BDF8] font-bold">//</span>
 					<span>Research &amp; Technical Notes</span>
@@ -108,7 +108,7 @@ const allCategories = Array.from(new Set(posts.map((p) => p.data.category)));
 				</div>
 
 				<!-- Articles Grid / List -->
-				<div class="flex flex-col gap-6" id="blog-posts-list" data-animate="stagger">
+				<div class="flex flex-col gap-6" id="blog-posts-list">
 					{posts.map((post) => (
 						<article
 							class="blog-post-card group bg-[#101A2B] border border-[#243752] rounded-xl p-6 sm:p-7 transition-all duration-200 hover:-translate-y-1 hover:border-[#38BDF8]/50 hover:bg-[#142035] hover:shadow-[0_8px_30px_rgba(56,189,248,0.08)] flex flex-col gap-3.5"
