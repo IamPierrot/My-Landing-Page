@@ -3,6 +3,7 @@
  * Easily update personal details, site metadata, and social links.
  */
 
+export const SITE_URL = "https://pierrot.io.vn";
 export const SITE_TITLE = "Pierrot // Security & Systems";
 export const SITE_DESCRIPTION =
 	"Personal workspace and research notes of Pierrot — Blue Team, DFIR, network forensics, systems programming, and DevSecOps.";

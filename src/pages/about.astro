@@ -19,11 +19,13 @@ import Header from '../components/Header.astro';
 import avatarImage from '../assets/avatar.jpg';
 import {
 	SITE_TITLE,
+	SITE_URL,
 	AUTHOR,
 	SOCIAL_LINKS,
 	SKILL_GROUPS,
 	EXPERIENCES,
 } from '../assets/config';
+import { buildProfileSchema } from '../utils/seo';
 
 const icons = {
 	Shield,
@@ -31,14 +33,30 @@ const icons = {
 	Cpu,
 	Server,
 };
+
+const pageTitle = `About // ${SITE_TITLE}`;
+const pageDescription =
+	'Background, technical capabilities, and research direction of Pierrot — Computer Science student focused on SOC/DFIR and security engineering.';
+const siteBase = Astro.site ?? new URL(SITE_URL);
+const aboutSchema = buildProfileSchema(
+	siteBase,
+	new URL(Astro.url.pathname, siteBase).href,
+	pageTitle,
+	pageDescription,
+	new URL('/og/about.png', siteBase).href,
+);
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<BaseHead
-			title={`About // ${SITE_TITLE}`}
-			description="Background, technical capabilities, and research direction of Pierrot — Computer Science student focused on SOC/DFIR and security engineering."
+			title={pageTitle}
+			description={pageDescription}
+			type="profile"
+			image="/og/about.png"
+			imageAlt={`About ${AUTHOR.name} (${AUTHOR.fullName}) — Security & Systems`}
+			schema={aboutSchema}
 		/>
 	</head>
 	<body class="bg-[#080D18] text-[#DCE8F5] antialiased">
@@ -85,6 +103,7 @@ const icons = {
 								width={112}
 								height={112}
 								loading="eager"
+								fetchpriority="high"
 								class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
 							/>
 						</div>

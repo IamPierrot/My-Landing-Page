@@ -24,11 +24,13 @@ import bkiscLogo from '../assets/bkisc-logo.png';
 import {
 	SITE_DESCRIPTION,
 	SITE_TITLE,
+	SITE_URL,
 	AUTHOR,
 	SOCIAL_LINKS,
 	FOCUS_AREAS,
 	PROJECTS,
 } from '../assets/config';
+import { buildHomeSchema } from '../utils/seo';
 
 const posts = (await getCollection('blog'))
 	.filter((post) => !post.data.draft)
@@ -37,6 +39,13 @@ const posts = (await getCollection('blog'))
 
 const projects = PROJECTS;
 const focusAreas = FOCUS_AREAS;
+
+const siteBase = Astro.site ?? new URL(SITE_URL);
+const homeSchema = buildHomeSchema(
+	siteBase,
+	new URL(Astro.url.pathname, siteBase).href,
+	new URL('/og/default.png', siteBase).href,
+);
 
 const icons = {
 	Microscope,
@@ -50,7 +59,13 @@ const icons = {
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<BaseHead
+			title={SITE_TITLE}
+			description={SITE_DESCRIPTION}
+			image="/og/default.png"
+			imageAlt="Pierrot — Security & Systems Engineering Portfolio"
+			schema={homeSchema}
+		/>
 	</head>
 	<body class="bg-[#080D18] text-[#DCE8F5] antialiased">
 		<Header />
@@ -166,6 +181,7 @@ const icons = {
 								width={176}
 								height={176}
 								loading="eager"
+								fetchpriority="high"
 								class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
 							/>
 							<div
@@ -417,7 +433,7 @@ const icons = {
 								<span class="text-[#243752]">&bull;</span>
 								<span class="text-[#8FA6C2]">{AUTHOR.club.role}</span>
 							</div>
-							<h3 id="affil-heading" class="text-base sm:text-lg font-semibold text-[#DCE8F5] mb-1.5">
+							<h2 id="affil-heading" class="text-base sm:text-lg font-semibold text-[#DCE8F5] mb-1.5">
 								<a
 									href={AUTHOR.club.url}
 									target="_blank"
@@ -427,7 +443,7 @@ const icons = {
 									{AUTHOR.club.name}
 									<ExternalLink class="w-3.5 h-3.5 opacity-60" />
 								</a>
-							</h3>
+							</h2>
 							<p class="text-xs sm:text-sm text-[#8FA6C2] leading-relaxed">
 								{AUTHOR.club.description}
 							</p>

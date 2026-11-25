@@ -17,25 +17,51 @@ import ProjectFilters from '../components/sidebar/ProjectFilters.astro';
 import MobileSidebar from '../components/sidebar/MobileSidebar.astro';
 import {
 	SITE_TITLE,
+	SITE_URL,
 	PROJECTS,
 	PROJECT_CATEGORIES,
 	PROJECT_TOOLS,
 	PROJECT_STATUSES,
 	SOCIAL_LINKS,
 } from '../assets/config';
+import { buildCollectionSchema } from '../utils/seo';
 
 const categories = PROJECT_CATEGORIES;
 const technologies = PROJECT_TOOLS;
 const statuses = PROJECT_STATUSES;
 const projects = PROJECTS;
+
+const pageTitle = `Projects // ${SITE_TITLE}`;
+const pageDescription =
+	'Verified Hack The Box Sherlocks and DFIR forensic research work by Pierrot — Volatility 3 memory triage, EVTX correlation, and incident timelines.';
+const siteBase = Astro.site ?? new URL(SITE_URL);
+const projectsSchema = buildCollectionSchema(
+	siteBase,
+	new URL(Astro.url.pathname, siteBase).href,
+	'CollectionPage',
+	pageTitle,
+	pageDescription,
+	projects.map((p) => ({
+		name: p.title,
+		url: p.demoUrl || '/projects/',
+		description: p.summary,
+	})),
+	[
+		{ name: 'Home', url: '/' },
+		{ name: 'Projects', url: '/projects/' },
+	],
+);
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<BaseHead
-			title={`Projects // ${SITE_TITLE}`}
-			description="Verified Hack The Box Sherlocks and DFIR forensic research work by Pierrot."
+			title={pageTitle}
+			description={pageDescription}
+			image="/og/projects.png"
+			imageAlt="DFIR Projects & HTB Sherlocks by Pierrot"
+			schema={projectsSchema}
 		/>
 	</head>
 	<body class="bg-[#080D18] text-[#DCE8F5] antialiased">

@@ -8,8 +8,15 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://iampierrot.github.io',
-  integrations: [mdx(), sitemap()],
+  site: 'https://pierrot.io.vn',
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) => !page.includes('/404'),
+      changefreq: 'weekly',
+      priority: 0.7,
+    }),
+  ],
 
   markdown: {
       shikiConfig: {

@@ -93,7 +93,7 @@ Different phases of network triage demand specialized analytical tooling:
 Every piece of user or adversary data undergoes progressive encapsulation as it travels down the TCP/IP stack:
 
 <figure>
-  <img src="/imgs/blog/network-forensics/tcp_encapsulation.png" alt="TCP/IP Encapsulation and De-encapsulation Process Diagram" loading="lazy" />
+  <img src="/imgs/blog/network-forensics/tcp_encapsulation.png" alt="TCP/IP Encapsulation and De-encapsulation Process Diagram" width="1376" height="768" loading="lazy" decoding="async" />
   <figcaption>Figure 1: Progressive encapsulation and de-encapsulation of network payload data through the 4-layer TCP/IP stack.</figcaption>
 </figure>
 
@@ -139,7 +139,7 @@ sequenceDiagram
 The capture excerpt below illustrates a completed TCP 3-way handshake and stream lifecycle:
 
 <figure>
-  <img src="/imgs/blog/network-forensics/tcp_stream.png" alt="Wireshark TCP Stream Dissection" loading="lazy" />
+  <img src="/imgs/blog/network-forensics/tcp_stream.png" alt="Wireshark TCP Stream Dissection" width="1928" height="756" loading="lazy" decoding="async" />
   <figcaption>Figure 2: Wireshark packet dissection illustrating the TCP 3-way handshake sequence (SYN &rarr; SYN-ACK &rarr; ACK) and stream tear-down.</figcaption>
 </figure>
 

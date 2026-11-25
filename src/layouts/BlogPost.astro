@@ -1,4 +1,6 @@
 ---
+import fs from 'node:fs';
+import path from 'node:path';
 import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 import BaseHead from '../components/BaseHead.astro';
@@ -11,12 +13,23 @@ import SidebarSection from '../components/sidebar/SidebarSection.astro';
 import TableOfContents from '../components/sidebar/TableOfContents.astro';
 import ReadingProgress from '../components/sidebar/ReadingProgress.astro';
 import MobileSidebar from '../components/sidebar/MobileSidebar.astro';
-import { Calendar, Tag, Clock, Share2, ArrowLeft, ArrowUp } from 'lucide-astro';
+import { AUTHOR, SITE_URL } from '../consts';
+import { buildArticleSchema } from '../utils/seo';
+import { Calendar, Tag, Clock, Share2, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-astro';
 
 interface Heading {
 	depth: number;
 	slug: string;
 	text: string;
+}
+
+interface RelatedPost {
+	id: string;
+	title: string;
+	description: string;
+	category: string;
+	pubDate: Date;
+	readingTime?: string;
 }
 
 interface Props {
@@ -29,6 +42,8 @@ interface Props {
 	tags?: string[];
 	readingTime?: string;
 	headings?: Heading[];
+	slug?: string;
+	relatedPosts?: RelatedPost[];
 }
 
 const {
@@ -41,13 +56,60 @@ const {
 	tags = [],
 	readingTime,
 	headings = [],
+	slug = '',
+	relatedPosts = [],
 } = Astro.props;
+
+const siteBase = Astro.site ?? new URL(SITE_URL);
+const pageUrl = new URL(Astro.url.pathname, siteBase).href;
+
+const slugOgFile = slug ? `blog-${slug}.png` : '';
+const hasSlugOgCard =
+	slugOgFile.length > 0 &&
+	fs.existsSync(path.join(process.cwd(), 'public', 'og', slugOgFile));
+
+const socialImage: ImageMetadata | string = heroImage
+	? heroImage
+	: hasSlugOgCard
+		? `/og/${slugOgFile}`
+		: '/og/default.png';
+
+const schemaImageUrl = new URL(
+	typeof socialImage === 'string' ? socialImage : socialImage.src,
+	siteBase,
+).href;
+
+const articleSchema = buildArticleSchema({
+	siteUrl: siteBase,
+	pageUrl,
+	title,
+	description,
+	imageUrl: schemaImageUrl,
+	pubDate,
+	updatedDate,
+	category,
+	tags,
+});
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={`${title} // Pierrot`} description={description} image={heroImage} />
+		<BaseHead
+			title={`${title} // ${AUTHOR.name}`}
+			description={description}
+			image={socialImage}
+			imageAlt={title}
+			type="article"
+			article={{
+				publishedTime: pubDate,
+				modifiedTime: updatedDate,
+				author: AUTHOR.name,
+				section: category,
+				tags,
+			}}
+			schema={articleSchema}
+		/>
 	</head>
 
 	<body class="bg-[#080D18] text-[#DCE8F5] antialiased selection:bg-[#38BDF8]/20 selection:text-[#38BDF8]">
@@ -161,6 +223,46 @@ const {
 					<div class="prose max-w-none" id="article-prose">
 						<slot />
 					</div>
+
+					<!-- Related Articles (Internal Linking) -->
+					{relatedPosts.length > 0 && (
+						<section class="mt-14 pt-8 border-t border-[#243752]" aria-labelledby="related-notes-heading">
+							<div class="flex items-center justify-between mb-4">
+								<h2 id="related-notes-heading" class="font-mono text-xs font-semibold uppercase tracking-wider text-[#8FA6C2] flex items-center gap-2">
+									<span class="text-[#38BDF8]">//</span>
+									<span>Related Technical Notes</span>
+								</h2>
+								<a href="/blog" class="font-mono text-xs text-[#38BDF8] hover:underline">
+									View all &rarr;
+								</a>
+							</div>
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+								{relatedPosts.map((rel) => (
+									<a
+										href={`/blog/${rel.id}/`}
+										class="group bg-[#101A2B] border border-[#243752] hover:border-[#38BDF8]/50 hover:bg-[#142035] rounded-lg p-4 flex flex-col justify-between gap-2.5 transition-all"
+									>
+										<div>
+											<div class="flex items-center justify-between gap-2 font-mono text-[11px] text-[#8FA6C2] mb-1.5">
+												<span class="text-[#38BDF8] font-medium">{rel.category}</span>
+												<FormattedDate date={rel.pubDate} />
+											</div>
+											<h3 class="text-sm font-semibold text-[#F0F6FC] group-hover:text-[#38BDF8] transition-colors line-clamp-2 mb-1">
+												{rel.title}
+											</h3>
+											<p class="text-xs text-[#8FA6C2] line-clamp-2 leading-relaxed">
+												{rel.description}
+											</p>
+										</div>
+										<div class="flex items-center justify-between font-mono text-[11px] text-[#38BDF8] pt-1">
+											<span>{rel.readingTime || 'Technical Note'}</span>
+											<ArrowRight class="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+										</div>
+									</a>
+								))}
+							</div>
+						</section>
+					)}
 
 					<!-- Article Footer Actions -->
 					<footer class="mt-14 pt-8 border-t border-[#243752] flex flex-col sm:flex-row sm:items-center justify-between gap-4">

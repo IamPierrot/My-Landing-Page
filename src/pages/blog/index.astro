@@ -13,19 +13,47 @@ import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+import { SITE_TITLE, SITE_URL } from '../../consts';
+import { buildCollectionSchema } from '../../utils/seo';
 
 const posts = (await getCollection('blog'))
 	.filter((post) => !post.data.draft)
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
 const allCategories = Array.from(new Set(posts.map((p) => p.data.category)));
+
+const pageTitle = `Technical Journal // ${SITE_TITLE}`;
+const pageDescription =
+	'Technical write-ups, network packet forensics, MITRE ATT&CK DFIR alignment, and Detection Engineering guides by Pierrot.';
+const siteBase = Astro.site ?? new URL(SITE_URL);
+const blogSchema = buildCollectionSchema(
+	siteBase,
+	new URL(Astro.url.pathname, siteBase).href,
+	'Blog',
+	pageTitle,
+	pageDescription,
+	posts.map((p) => ({
+		name: p.data.title,
+		url: `/blog/${p.id}/`,
+		description: p.data.description,
+	})),
+	[
+		{ name: 'Home', url: '/' },
+		{ name: 'Blog', url: '/blog/' },
+	],
+);
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={`Blog // ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+		<BaseHead
+			title={pageTitle}
+			description={pageDescription}
+			image="/og/blog.png"
+			imageAlt="Technical Journal — Security Research & Notes by Pierrot"
+			schema={blogSchema}
+		/>
 	</head>
 	<body class="bg-[#080D18] text-[#DCE8F5] antialiased selection:bg-[#38BDF8]/20 selection:text-[#38BDF8]">
 		<Header />
@@ -177,9 +205,9 @@ const allCategories = Array.from(new Set(posts.map((p) => p.data.category)));
 					class="hidden flex-col items-center justify-center p-10 bg-[#101A2B]/60 border border-[#243752] rounded-xl text-center my-8"
 				>
 					<BookOpen class="w-10 h-10 text-[#546C8E] mb-3" />
-					<h3 class="font-mono text-base font-semibold text-[#DCE8F5] mb-1">
+					<h2 class="font-mono text-base font-semibold text-[#DCE8F5] mb-1">
 						NO_DOCUMENTS_FOUND
-					</h3>
+					</h2>
 					<p class="text-sm text-[#8FA6C2] max-w-sm mb-4">
 						No technical articles matched your search or category filter.
 					</p>
